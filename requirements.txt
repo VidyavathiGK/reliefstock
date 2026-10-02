@@ -1,0 +1,8 @@
+# Core Framework
+Django==5.1.6
+
+# PostgreSQL Database Adapter (psycopg 3 binary for Windows/cross-platform)
+psycopg[binary]==3.2.4
+
+# Environment Configuration
+python-decouple==3.8

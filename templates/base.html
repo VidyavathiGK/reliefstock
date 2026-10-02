@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ReliefStock{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <h1>ReliefStock — Community Inventory &amp; Donation System</h1>
+        <nav>
+            {% if user.is_authenticated %}
+                <a href="{% url 'home' %}">Dashboard</a> |
+                <a href="{% url 'admin:index' %}">Django Admin</a> |
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">Log Out</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Log In</a> |
+                <a href="{% url 'admin:index' %}">Admin Portal</a>
+            {% endif %}
+        </nav>
+    </header>
+    <hr>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <hr>
+    <footer>
+        <small>ReliefStock &bull; Phase 1 Foundation</small>
+    </footer>
+</body>
+</html>

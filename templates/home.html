@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | ReliefStock{% endblock %}
+
+{% block content %}
+<h2>Logged in as {{ user.username }} ({{ user.role }})</h2>
+
+<section>
+    <h3>User Profile Summary</h3>
+    <ul>
+        <li><strong>Username:</strong> {{ user.username }}</li>
+        <li><strong>Role:</strong> {{ user.get_role_display }} ({{ user.role }})</li>
+        <li><strong>Email:</strong> {{ user.email|default:"None specified" }}</li>
+        <li><strong>Phone Number:</strong> {{ user.phone_number|default:"None specified" }}</li>
+        <li><strong>Organization:</strong> 
+            {% if user.organization %}
+                {{ user.organization.name }} ({{ user.organization.get_org_type_display }})
+            {% else %}
+                <em>No organization assigned</em>
+            {% endif %}
+        </li>
+    </ul>
+
+    <p>
+        <a href="{% url 'admin:index' %}">Go to Django Admin Panel</a> to manage Organizations, Inventory Items, Categories, and Users.
+    </p>
+</section>
+{% endblock %}
