@@ -1,0 +1,45 @@
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+exclude = [
+    ".git",
+    ".venv",
+    ".pytest_cache",
+    "staticfiles",
+    "**/migrations/*",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # Line length is handled by ruff format
+    "B008",  # Function call in argument defaults
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["reliefstock", "accounts", "organizations", "inventory"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.coverage.run]
+source = ["reliefstock", "accounts", "organizations", "inventory"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "reliefstock/wsgi.py",
+    "reliefstock/asgi.py",
+    "manage.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false

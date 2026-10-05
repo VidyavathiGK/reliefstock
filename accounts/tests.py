@@ -1,7 +1,8 @@
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
-from organizations.models import Organization
+
 from accounts.models import User
+from organizations.models import Organization
 
 
 class AccountsAndAuthTests(TestCase):
@@ -16,7 +17,7 @@ class AccountsAndAuthTests(TestCase):
             org_type=Organization.OrgType.FOOD_BANK,
             address="123 River Road",
             contact_email="admin@metrorelief.org",
-            contact_phone="555-0101"
+            contact_phone="555-0101",
         )
         self.user = User.objects.create_user(
             username="staff_alex",
@@ -24,7 +25,7 @@ class AccountsAndAuthTests(TestCase):
             password="StrongPassword123!",
             role=User.Role.STAFF,
             phone_number="555-0102",
-            organization=self.org
+            organization=self.org,
         )
 
     def test_custom_user_creation_and_attributes(self):
@@ -37,20 +38,20 @@ class AccountsAndAuthTests(TestCase):
 
     def test_unauthenticated_user_redirected_to_login(self):
         """Unauthenticated requests to root URL must redirect to login."""
-        response = self.client.get(reverse('home'))
+        response = self.client.get(reverse("home"))
         self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse('login'), response.url)
+        self.assertIn(reverse("login"), response.url)
 
     def test_login_page_renders_successfully(self):
         """Login page must render with HTTP 200 and standard form."""
-        response = self.client.get(reverse('login'))
+        response = self.client.get(reverse("login"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Log In")
 
     def test_authenticated_user_can_access_dashboard(self):
         """Logged-in users should see their username and role on the home dashboard."""
         self.client.login(username="staff_alex", password="StrongPassword123!")
-        response = self.client.get(reverse('home'))
+        response = self.client.get(reverse("home"))
         self.assertEqual(response.status_code, 200)
         # Required format: "Logged in as {username} ({role})"
         self.assertContains(response, "Logged in as staff_alex (STAFF)")

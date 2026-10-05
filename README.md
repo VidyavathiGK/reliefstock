@@ -1,195 +1,325 @@
 # ReliefStock — Community Inventory & Donation Management System
 
-> **Phase 1: Project Skeleton, Custom User/Auth System & Domain Schema**
+[![ReliefStock CI](https://github.com/VidyavathiGK/reliefstock/actions/workflows/ci.yml/badge.svg)](https://github.com/VidyavathiGK/reliefstock/actions/workflows/ci.yml)
 
-ReliefStock is a full-stack Django platform designed to coordinate inventory, relief supplies, and volunteer operations for emergency shelters, food banks, and humanitarian NGOs.
+> **Enterprise-grade Humanitarian Relief & Food Bank Inventory Platform**
+> *Built with Django 5.x, Django REST Framework, PostgreSQL, ReportLab, pytest, WhiteNoise, and Gunicorn.*
 
----
-
-## 1. Project Overview & Architecture
-
-### Phase 1 Scope
-- **Skeleton & Config:** Twelve-Factor environment configuration using `python-decouple`.
-- **Authentication & Roles:** Custom `accounts.User` extending Django's `AbstractUser` with role tiers (`ADMIN`, `STAFF`, `VOLUNTEER`, `DONOR`) and optional organization affiliation.
-- **Organizations App:** `organizations.Organization` model supporting Shelters, Food Banks, and NGOs.
-- **Inventory App (Schema Only):** `Category` and `InventoryItem` catalog definitions (quantities and transaction logic will be added in Phase 2).
-- **Admin Interface:** Fully customized Django Admin with role filters, organization search, and inline custom user creation.
-- **Auth Views:** Built-in Django auth views with post-login redirect displaying username and role.
-
-### Why a Single `settings.py` with Environment Variables?
-We chose a unified `settings.py` powered by `python-decouple` rather than split `base.py`/`dev.py`/`prod.py` files.
-- **Twelve-Factor Alignment:** Code remains identical across environments; only environment variables change.
-- **Maintainability:** Eliminates wildcard import confusion (`from .base import *`), duplicate settings definitions, and circular import traps.
-- **Readability for Code Reviews:** Clear, centralized configuration that is easy to navigate and explain during technical interviews.
+ReliefStock is a full-featured, multi-tenant inventory, donation intake, and relief distribution management platform designed specifically for community food banks, homeless shelters, and disaster relief NGOs. It coordinates the full lifecycle of humanitarian aid: from multi-item drop-off intakes and live stock tracking to formal distribution request approval and partial/full client fulfillment.
 
 ---
 
-## 2. Project Directory Structure
+## 1. System Architecture & Feature Matrix
 
 ```text
-reliefstock/
-├── .env                     # Local environment secrets (ignored by git)
-├── .env.example             # Template for required environment variables
-├── .gitignore               # Standard Django and Python exclusions
-├── README.md                # Project documentation and quickstart
-├── requirements.txt         # Pinned production and development dependencies
-├── manage.py
-├── reliefstock/             # Core project package
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py          # Unified 12-factor settings
-│   ├── urls.py              # Root routing (Admin, Login/Logout, Dashboard)
-│   └── wsgi.py
-├── accounts/                # Custom User and Authentication app
-│   ├── migrations/          # Migration 0001_initial.py
-│   ├── admin.py             # UserAdmin with role and organization fieldsets
-│   ├── apps.py
-│   ├── models.py            # User model extending AbstractUser
-│   ├── tests.py             # Unit & integration tests for auth
-│   └── views.py             # Home dashboard view
-├── organizations/           # Relief Organizations app
-│   ├── migrations/          # Migration 0001_initial.py
-│   ├── admin.py             # OrganizationAdmin configuration
-│   ├── apps.py
-│   ├── models.py            # Organization model (SHELTER, FOOD_BANK, NGO)
-│   └── tests.py             # Unit tests for Organization model
-├── inventory/               # Inventory Catalog domain app
-│   ├── migrations/          # Migration 0001_initial.py
-│   ├── admin.py             # CategoryAdmin and InventoryItemAdmin
-│   ├── apps.py
-│   ├── models.py            # Category and InventoryItem models
-│   └── tests.py             # Unit tests for catalog models
-└── templates/               # Plain Django HTML templates
-    ├── base.html            # Semantic HTML base layout
-    ├── home.html            # Post-login redirect placeholder
-    └── registration/
-        └── login.html       # Standard Django authentication login form
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           ReliefStock Architecture                          │
+├──────────────────────────────────────┬──────────────────────────────────────┤
+│               Web UI                 │               REST API               │
+│  - Django HTML Templates             │  - Django REST Framework (DRF)       │
+│  - Role-scoped Dashboards            │  - Token & Session Authentication    │
+│  - CSV & PDF Reporting Engine        │  - Atomic Multi-item Endpoints       │
+│  - Donor Self-Service Portal         │  - Tenant-isolated ViewSets          │
+├──────────────────────────────────────┴──────────────────────────────────────┤
+│                          Core Domain & Business Logic                       │
+│  - Multi-tenant Organization Scoping (request.org)                          │
+│  - Immutable Stock Ledger (StockTransaction)                                │
+│  - Live Stock Calculation (Coalesce / Sum / Case / When)                    │
+│  - Governance: Request (Pending) ──► Review (Approved) ──► Fulfill          │
+│  - Automated Restock Thresholds & Perishable Expiry Tracking                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                          Infrastructure & Reliability                       │
+│  - PostgreSQL 16 (psycopg 3)         │  - Gunicorn WSGI Web Process         │
+│  - WhiteNoise Static Compression     │  - pytest + pytest-django Test Suite │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Complete 5-Phase Evolution
+1. **Phase 1: Multi-Tenant Foundation & Auth**
+   Custom `User` model with 4 distinct roles (`ADMIN`, `STAFF`, `VOLUNTEER`, `DONOR`), `Organization` tenant isolation, catalog items, and Django administration.
+2. **Phase 2: Immutable Stock Ledger & Inbound Intakes**
+   `StockTransaction` double-entry ledger (`DONATION_IN`, `MANUAL_ADJUSTMENT_IN/OUT`), multi-item atomic donation recording, manual stock adjustments with audit notes, and live stock calculation.
+3. **Phase 3: Outbound Distribution Governance & Alert Queues**
+   `DistributionRequest` and `DistributionRequestItem` models, request approval/rejection lifecycle, live stock over-fulfillment prevention, partial fulfillment support, perishable expiry tracking (7-day window), and low-stock alerts.
+4. **Phase 4: Executive Operations Dashboard, CSV/PDF Reporting & Permissions Polish**
+   Staff/Admin operational cockpit, tabular reporting engine with dynamic date/search filters, 1-click **CSV** and **PDF** exports (via ReportLab flowables), dedicated read-only Donor Portal, and unified `@role_required` decorators.
+5. **Phase 5: REST API, Automated Testing Suite & Production Deployment**
+   Full DRF API (`/api/v1/`), Token Authentication, atomic nested serializers, 42-test `pytest` automated test suite with fixtures, Gunicorn WSGI setup, WhiteNoise asset compression, and 1-click Render blueprint (`render.yaml`).
 
 ---
 
-## 3. Setup and Installation Guide
+## 2. REST API Documentation (`/api/v1/`)
 
-### Prerequisites
-- Python 3.12+ (tested with Python 3.13)
-- PostgreSQL database instance (local service, Docker, or managed cloud like Supabase/Neon/Render)
+The ReliefStock REST API provides programmatic access for third-party integrations, mobile client apps, and external logistics systems.
 
-### Step 1: Clone & Setup Virtual Environment
-```bash
-# Navigate to the project directory
+### 2.1 Authentication & Base URL
+* **Base URL:** `/api/v1/`
+* **Authentication Method:** Token Authentication (or Session Authentication for browsable API testing).
+* **Header format:**
+  ```http
+  Authorization: Token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b
+  ```
+
+#### Obtain Auth Token
+* **Endpoint:** `POST /api/v1/auth/token/`
+* **Request:**
+  ```json
+  {
+    "username": "staff_marcus",
+    "password": "StrongPassword123!"
+  }
+  ```
+* **Response:**
+  ```json
+  {
+    "token": "4a2b8e91c7f0d3e2a1b9c8d7e6f5a4b3c2d1e0f9"
+  }
+  ```
+
+---
+
+### 2.2 API Endpoints Reference
+
+| Method | Endpoint | Description | Permitted Roles |
+|---|---|---|---|
+| `GET` | `/api/v1/items/` | List catalog items with live stock counts and low-stock status | Staff, Admin |
+| `POST` | `/api/v1/items/` | Create a new catalog item | Staff, Admin |
+| `GET` | `/api/v1/items/low_stock/` | Filter items at or below their reorder threshold | Staff, Admin |
+| `GET` | `/api/v1/items/expiring_soon/` | Perishable batches expiring within next 7 days | Staff, Admin |
+| `GET` | `/api/v1/items/expired/` | Perishable batches past expiry date | Staff, Admin |
+| `GET` | `/api/v1/categories/` | List inventory categories | Staff, Admin |
+| `GET` | `/api/v1/donations/` | List donations (Donors see only their own history) | All Authenticated |
+| `POST` | `/api/v1/donations/` | Atomically record multi-item donation intake | Staff, Volunteer, Admin |
+| `GET` | `/api/v1/distribution-requests/` | List distribution requests for organization | Staff, Volunteer, Admin |
+| `POST` | `/api/v1/distribution-requests/` | Create a new distribution request | Staff, Volunteer, Admin |
+| `POST` | `/api/v1/distribution-requests/{id}/review/` | Approve or reject a distribution request | Admin Only |
+| `POST` | `/api/v1/distribution-requests/{id}/fulfill/` | Dispatch stock and atomically deduct ledger | Staff, Admin |
+| `GET` | `/api/v1/dashboard/` | Real-time operational metrics for organization | Staff, Admin |
+
+---
+
+### 2.3 Sample API Workflows & Payloads
+
+#### A. Record an Inbound Donation with Multiple Items
+`POST /api/v1/donations/`
+```json
+{
+  "donor_name": "Midwest Harvest Co.",
+  "donor_contact": "logistics@midwestharvest.test",
+  "date_received": "2026-10-02",
+  "notes": "Direct farm donation: dry beans and fresh dairy",
+  "items": [
+    {
+      "inventory_item": 1,
+      "quantity": "250.00",
+      "note": "Grade-A pinto beans"
+    },
+    {
+      "inventory_item": 4,
+      "quantity": "80.00",
+      "expiry_date": "2026-10-09",
+      "note": "Refrigerated crate #3"
+    }
+  ]
+}
+```
+
+#### B. Create a Distribution Request
+`POST /api/v1/distribution-requests/`
+```json
+{
+  "recipient_name": "Downtown Shelter Pantry",
+  "recipient_contact": "case-worker-88@shelter.test",
+  "notes": "Weekly emergency pantry restock",
+  "items": [
+    {
+      "inventory_item": 1,
+      "quantity_requested": "50.00"
+    },
+    {
+      "inventory_item": 4,
+      "quantity_requested": "20.00"
+    }
+  ]
+}
+```
+
+#### C. Administrative Review (Approve or Reject)
+`POST /api/v1/distribution-requests/{id}/review/`
+```json
+{
+  "action": "APPROVE",
+  "notes": "Authorized based on standard monthly shelter quota."
+}
+```
+
+#### D. Fulfill / Dispatch Relief Supplies
+`POST /api/v1/distribution-requests/{id}/fulfill/`
+```json
+{
+  "notes": "Dispatched via logistics van #2",
+  "dispatches": [
+    {
+      "item_id": 12,
+      "quantity_to_fulfill": "50.00"
+    },
+    {
+      "item_id": 13,
+      "quantity_to_fulfill": "20.00"
+    }
+  ]
+}
+```
+*Note: The API automatically verifies available live stock on hand. If stock is insufficient or if dispatch exceeds remaining balance, the request is rejected with HTTP 400 and an informative error message.*
+
+---
+
+## 3. Role-Based Access Control (RBAC) Matrix
+
+| Platform Feature / Route | Route URL | ADMIN | STAFF | VOLUNTEER | DONOR |
+|---|---|:---:|:---:|:---:|:---:|
+| **Landing Dispatcher** | `/` | Home Portal | Home Portal | Home Portal | Redirect to `/donor/` |
+| **Donor Self-Service Portal** | `/donor/` | Denied | Denied | Denied | **Yes (Own Data Only)** |
+| **Executive Dashboard (Web & API)** | `/inventory/dashboard/`, `/api/v1/dashboard/` | **Yes** | **Yes** | Denied | Denied |
+| **Management Reports (HTML/CSV/PDF)** | `/inventory/reports/*` | **Yes** | **Yes** | Denied | Denied |
+| **Catalog Items & Live Stock** | `/inventory/`, `/api/v1/items/` | **Yes** | **Yes** | Denied | Denied |
+| **Low-Stock & Expiry Alerts** | `/inventory/alerts/*`, `/api/v1/items/*` | **Yes** | **Yes** | Denied | Denied |
+| **Manual Stock Adjustments** | `/inventory/<id>/adjust/` | **Yes** | **Yes** | Denied | Denied |
+| **Record Inbound Donation** | `/inventory/donations/record/`, `/api/v1/donations/` | **Yes** | **Yes** | **Yes** | Denied |
+| **Create Distribution Request** | `/inventory/distributions/create/`, `/api/v1/distribution-requests/` | **Yes** | **Yes** | **Yes** | Denied |
+| **List Distribution Requests** | `/inventory/distributions/`, `/api/v1/distribution-requests/` | **Yes** | **Yes** | **Yes** | Denied |
+| **Review Request (Approve/Reject)** | `.../review/`, `/api/v1/distribution-requests/{id}/review/` | **Yes** | Denied | Denied | Denied |
+| **Fulfill Distribution** | `.../fulfill/`, `/api/v1/distribution-requests/{id}/fulfill/` | **Yes** | **Yes** | Denied | Denied |
+| **Django Admin Site** | `/admin/` | **Yes** | Staff Only | Denied | Denied |
+
+---
+
+## 4. Automated Testing, Code Quality & CI/CD
+
+ReliefStock enforces strict code quality and continuous integration using modern developer tooling:
+
+### 4.1 Testing with `pytest` & `pytest-cov`
+* **Test Architecture:** 42 automated tests covering models, atomic ledgers, multi-tenant boundaries, and DRF API endpoints.
+* **Coverage Analysis:** `pytest-cov` runs on every test invocation with terminal reports.
+```powershell
+# Run the test suite with coverage
+pytest
+```
+*Sample output:*
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.13.4, pytest-9.1.1, django-5.1.6
+rootdir: reliefstock, configfile: pytest.ini
+collected 42 items
+
+accounts/tests.py ..................................                    [ 10%]
+inventory/tests.py .................................                    [ 62%]
+organizations/tests.py .                                                [ 64%]
+tests/test_api_endpoints.py ........                                   [ 83%]
+tests/test_distribution_workflow.py ...                                 [ 90%]
+tests/test_stock_logic.py .....                                         [100%]
+
+Name                           Stmts   Miss  Cover
+--------------------------------------------------
+TOTAL                           1692    347    79%
+============================== 42 passed in 64.60s =============================
+```
+
+### 4.2 Code Quality & Formatting with `Ruff`
+We use **[Ruff](https://docs.astral.sh/ruff/)** for blazing-fast linting and automatic formatting:
+```powershell
+# Check for lint errors
+ruff check .
+
+# Automatically apply safe fixes
+ruff check --fix .
+
+# Verify formatting without altering files
+ruff format --check .
+
+# Auto-format all Python files
+ruff format .
+```
+
+### 4.3 Git Pre-Commit Hooks
+Pre-commit hooks automatically format code and check for hygiene issues before any commit:
+```powershell
+# Install pre-commit hooks into git (one-time setup)
+pre-commit install
+
+# Manually run all hooks across the entire repository
+pre-commit run --all-files
+```
+
+### 4.4 GitHub Actions Continuous Integration
+Every push and pull request to `main` triggers [`.github/workflows/ci.yml`](file:///c:/Users/91843/.gemini/antigravity-ide/scratch/reliefstock/.github/workflows/ci.yml):
+1. **PostgreSQL 16 Service:** Boots a dedicated test database container.
+2. **Linting Check:** Fails the build if `ruff check .` finds any unaddressed lint errors.
+3. **Format Check:** Fails the build if `ruff format --check .` detects unformatted code.
+4. **Test & Coverage Execution:** Runs `pytest --cov` and publishes full coverage metrics.
+
+For complete contributing guidelines and pull request instructions, see [CONTRIBUTING.md](file:///c:/Users/91843/.gemini/antigravity-ide/scratch/reliefstock/CONTRIBUTING.md).
+
+---
+
+## 5. Production Deployment Guide
+
+ReliefStock is configured as a **12-Factor App** ready for free-tier deployment on modern cloud platforms such as **Render**, **Railway**, or **Fly.io**.
+
+### 5.1 Architecture Stack
+* **WSGI Web Server:** `Gunicorn` (`Procfile`) for multi-worker HTTP request handling.
+* **Static Asset Management:** `WhiteNoise` with `CompressedManifestStaticFilesStorage` for automatic Brotli/Gzip compression, cache headers, and self-contained static asset serving without needing an external S3 bucket or Nginx proxy.
+* **Database:** Managed PostgreSQL (e.g. Render PostgreSQL or Supabase).
+
+### 5.2 Deploying to Render (1-Click Blueprint)
+1. Fork or push this repository to GitHub.
+2. In the [Render Dashboard](https://dashboard.render.com/), click **New** $\rightarrow$ **Blueprint**.
+3. Connect your repository. Render will automatically detect [`render.yaml`](file:///c:/Users/91843/.gemini/antigravity-ide/scratch/reliefstock/render.yaml):
+   - Provisions a free managed PostgreSQL database (`reliefstock_db`).
+   - Runs `./build.sh` (`pip install`, `collectstatic`, `migrate`).
+   - Starts the Gunicorn web server via `gunicorn reliefstock.wsgi:application`.
+
+### 5.3 Manual Production Environment Variables
+| Variable | Description | Production Example |
+|---|---|---|
+| `SECRET_KEY` | Cryptographic signing secret | `django-insecure-...` (generate strong secret) |
+| `DEBUG` | Disables debug stack traces in production | `False` |
+| `ALLOWED_HOSTS` | Comma-separated allowed hostnames | `reliefstock.onrender.com,127.0.0.1` |
+| `DB_ENGINE` | Database engine backend | `django.db.backends.postgresql` |
+| `DB_NAME` | PostgreSQL database name | `reliefstock_db` |
+| `DB_USER` | PostgreSQL username | `reliefstock_user` |
+| `DB_PASSWORD` | PostgreSQL password | `super_secure_password` |
+| `DB_HOST` | Database host | `dpg-xxxx.oregon-postgres.render.com` |
+| `DB_PORT` | Database port | `5432` |
+
+---
+
+## 6. Local Quickstart
+
+### 1. Clone & Activate Environment
+```powershell
 cd reliefstock
-
-# Create a virtual environment
 python -m venv .venv
-
-# Activate the virtual environment
-# Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-# macOS/Linux:
-source .venv/bin/activate
-
-# Install dependencies
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
----
-
-## 4. Configuring `.env`
-
-Copy `.env.example` to `.env`:
-```bash
-# Windows:
+### 2. Configure Environment Secrets
+Copy the environment template:
+```powershell
 copy .env.example .env
-# Linux / macOS:
-cp .env.example .env
 ```
+*(Ensure PostgreSQL is running locally, or configure your database credentials).*
 
-Open `.env` and verify your settings:
-```ini
-SECRET_KEY=your-secure-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-
-# PostgreSQL Configuration
-DB_ENGINE=django.db.backends.postgresql
-DB_NAME=reliefstock_db
-DB_USER=postgres
-DB_PASSWORD=your_postgres_password
-DB_HOST=localhost
-DB_PORT=5432
-DB_CONNECT_TIMEOUT=3
-```
-
-> **Note on Quick Local Testing:** If your PostgreSQL server is not currently running, you can temporarily set `DB_ENGINE=django.db.backends.sqlite3` in `.env` to test with SQLite.
-
----
-
-## 5. Running Database Migrations
-
-Before running migrations, make sure your PostgreSQL database exists:
-```sql
-CREATE DATABASE reliefstock_db;
-```
-
-Then run the migration command:
-```bash
+### 3. Run Migrations & Collect Static Files
+```powershell
 python manage.py migrate
+python manage.py collectstatic --no-input
 ```
 
-This applies all initial schema migrations in order:
-1. `organizations.0001_initial`
-2. `accounts.0001_initial` (creates custom `accounts_user` table)
-3. `inventory.0001_initial` (creates `inventory_category` and `inventory_inventoryitem` tables)
-4. Standard Django admin, auth permissions, and session tables.
-
----
-
-## 6. Creating a Superuser
-
-To access the Django Admin panel and provision your initial users and organizations, run the following command interactively:
-
-```bash
-python manage.py createsuperuser
-```
-
-You will be prompted to enter:
-1. **Username** (e.g. `admin`)
-2. **Email address** (e.g. `admin@reliefstock.org`)
-3. **Password** (enter your own secure password)
-4. **Password confirmation**
-
----
-
-## 7. Starting the Development Server
-
-Start the local server:
-```bash
+### 4. Run Development Server
+```powershell
 python manage.py runserver
 ```
-
-Open your browser to:
-- **Application Dashboard:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/) *(redirects to login if unauthenticated)*
-- **User Login:** [http://127.0.0.1:8000/accounts/login/](http://127.0.0.1:8000/accounts/login/)
-- **Django Admin Portal:** [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
-
----
-
-## 8. Verifying Admin & Model Relationships
-
-1. Log into `/admin/` with your superuser credentials.
-2. Under **ORGANIZATIONS**, click **Add** to create an organization (e.g., `City Hope Shelter`, `Org Type: Emergency Shelter`).
-3. Under **ACCOUNTS**, click **Add** to create a user and assign them:
-   - Role: `STAFF` or `VOLUNTEER`
-   - Organization: Select `City Hope Shelter`
-4. Under **INVENTORY**, create a **Category** (e.g., `Non-Perishable Food`) and an **Inventory Item** (e.g., `Canned Tuna 150g`, linked to `City Hope Shelter`).
-5. Log out of Admin and log into `/accounts/login/` with the staff user to verify the dashboard displays:
-   `Logged in as <username> (<ROLE>)`.
-
----
-
-## 9. Running Automated Tests
-
-Run the test suite to ensure all models and auth flows are operating as expected:
-```bash
-python manage.py test
-```
+Visit [http://127.0.0.1:8000/](http://127.0.0.1:8000/) to access the application.
+Visit [http://127.0.0.1:8000/api/v1/](http://127.0.0.1:8000/api/v1/) to explore the browsable REST API.

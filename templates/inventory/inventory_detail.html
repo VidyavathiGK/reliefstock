@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER & BREADCRUMB -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'inventory:inventory_list' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Back to Inventory List</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--secondary);">SKU Detail</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            {{ item.name }}
+        </h1>
+        <p class="page-subtitle">
+            Commodity catalog specification and complete ledger audit trail for {{ item.organization.name }}.
+        </p>
+    </div>
+
+    <div>
+        <a href="{% url 'inventory:manual_adjustment' item.pk %}" class="btn btn-primary btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Adjust Stock
+        </a>
+    </div>
+</section>
+
+<!-- ITEM METRICS / OVERVIEW CARD -->
+<div class="form-card" style="margin-bottom: 32px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+        <div>
+            <span class="meta-label">Current Available Stock</span>
+            <div style="font-size: 2rem; font-weight: 800; color: {% if item.reorder_threshold is not None and current_stock <= item.reorder_threshold %}var(--danger){% else %}var(--success){% endif %}; margin-top: 4px;">
+                {{ current_stock }} {{ item.unit_of_measure }}
+            </div>
+            {% if item.reorder_threshold is not None and current_stock <= item.reorder_threshold %}
+                <div style="margin-top: 6px;">
+                    <span class="badge badge-danger">LOW STOCK (Threshold: {{ item.reorder_threshold }})</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <span class="meta-label">Category</span>
+            <div style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-top: 4px;">
+                {{ item.category.name }}
+            </div>
+        </div>
+
+        <div>
+            <span class="meta-label">Reorder Threshold</span>
+            <div style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-top: 4px;">
+                {{ item.reorder_threshold|default:"Not set" }}
+            </div>
+        </div>
+
+        <div>
+            <span class="meta-label">Perishable</span>
+            <div style="margin-top: 4px;">
+                {% if item.is_perishable %}
+                    <span class="badge badge-warning" style="font-size: 0.82rem;">Perishable</span>
+                {% else %}
+                    <span class="badge" style="background-color: #f1f5f9; color: #64748b; font-size: 0.82rem;">Non-Perishable</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <span class="meta-label">Registered Since</span>
+            <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted); margin-top: 4px;">
+                {{ item.created_at|date:"Y-m-d H:i" }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TRANSACTION AUDIT HISTORY -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            Transaction Audit History (Ledger Log)
+        </h3>
+        <p class="section-subtitle">Chronological ledger transactions affecting physical stock balances.</p>
+    </div>
+</div>
+
+{% if transactions %}
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date &amp; Time</th>
+                    <th>Type</th>
+                    <th>Quantity Change</th>
+                    <th>Recorded By</th>
+                    <th>Source / Event</th>
+                    <th>Expiry Date</th>
+                    <th>Notes / Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                    <tr>
+                        <td style="white-space: nowrap; font-size: 0.85rem; color: var(--text-muted);">
+                            {{ txn.created_at|date:"Y-m-d H:i" }}
+                        </td>
+                        <td>
+                            {% if txn.transaction_type == 'DONATION_IN' %}
+                                <span class="badge badge-success">Donation (In)</span>
+                            {% elif txn.transaction_type == 'MANUAL_ADJUSTMENT_IN' %}
+                                <span class="badge badge-primary">Manual Add (+)</span>
+                            {% elif txn.transaction_type == 'MANUAL_ADJUSTMENT_OUT' %}
+                                <span class="badge badge-warning">Manual Deduct (-)</span>
+                            {% elif txn.transaction_type == 'DISTRIBUTION_OUT' %}
+                                <span class="badge" style="background-color: #e0f2fe; color: #0284c7;">Distribution (Out)</span>
+                            {% else %}
+                                <span class="badge">{{ txn.get_transaction_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong style="font-size: 1rem; color: {% if txn.transaction_type == 'DONATION_IN' or txn.transaction_type == 'MANUAL_ADJUSTMENT_IN' %}var(--success){% else %}var(--danger){% endif %};">
+                                {% if txn.transaction_type == 'DONATION_IN' or txn.transaction_type == 'MANUAL_ADJUSTMENT_IN' %}
+                                    +{{ txn.quantity }}
+                                {% else %}
+                                    -{{ txn.quantity }}
+                                {% endif %}
+                                {{ item.unit_of_measure }}
+                            </strong>
+                        </td>
+                        <td style="font-size: 0.88rem; color: var(--text-muted);">{{ txn.recorded_by.username }}</td>
+                        <td>
+                            {% if txn.donation %}
+                                <span style="font-size: 0.85rem;">Donation #{{ txn.donation.pk }} ({{ txn.donation.donor_name|default:"Anonymous" }})</span>
+                            {% elif txn.distribution_request %}
+                                <a href="{% url 'inventory:distribution_request_detail' txn.distribution_request.pk %}" style="font-size: 0.85rem; font-weight: 600;">
+                                    Request #{{ txn.distribution_request.pk }} ({{ txn.distribution_request.recipient_name }})
+                                </a>
+                            {% else %}
+                                <em style="font-size: 0.85rem; color: var(--text-subtle);">Direct Adjustment</em>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">
+                            {{ txn.expiry_date|default:"—" }}
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">
+                            {{ txn.note|default:"—" }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="form-card" style="text-align: center; padding: 40px; color: var(--text-muted);">
+        No transaction history recorded for this item yet.
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Low Stock Alerts | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER & ACTION TOOLBAR -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Home</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--danger);">Urgent Alerts</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--danger);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {{ organization.name }} &mdash; Low Stock Alerts
+        </h1>
+        <p class="page-subtitle">
+            Catalog commodities where current available stock is at or below the configured reorder threshold.
+        </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'inventory:record_donation' %}" class="btn btn-primary btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            + Log Incoming Donation
+        </a>
+        <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline btn-sm">
+            Full Catalog View
+        </a>
+    </div>
+</section>
+
+<!-- LOW STOCK TABLE -->
+{% if items %}
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Reorder Threshold</th>
+                    <th>Shortfall Deficit</th>
+                    <th>Unit</th>
+                    <th>Perishable</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr style="background-color: {% if item.current_stock == 0 %}#fef2f2{% else %}#fffbeb{% endif %};">
+                        <td>
+                            <strong style="font-size: 1rem;">
+                                <a href="{% url 'inventory:inventory_detail' item.pk %}">{{ item.name }}</a>
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: var(--border-light); color: var(--text-muted);">
+                                {{ item.category.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong style="font-size: 1.15rem; color: {% if item.current_stock == 0 %}var(--danger){% else %}var(--warning){% endif %};">
+                                {{ item.current_stock }}
+                            </strong>
+                            {% if item.current_stock == 0 %}
+                                <div style="margin-top: 4px;">
+                                    <span class="badge badge-danger">OUT OF STOCK</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 600; color: var(--text-muted);">
+                            {{ item.reorder_threshold }}
+                        </td>
+                        <td>
+                            <strong style="color: var(--danger); font-size: 1.05rem;">
+                                -{{ item.shortfall }} {{ item.unit_of_measure }}
+                            </strong>
+                        </td>
+                        <td style="color: var(--text-muted);">
+                            {{ item.unit_of_measure }}
+                        </td>
+                        <td>
+                            {% if item.is_perishable %}
+                                <span class="badge badge-warning">Yes</span>
+                            {% else %}
+                                <span class="badge" style="background-color: #f1f5f9; color: #64748b;">No</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
+                                <a href="{% url 'inventory:record_donation' %}" class="btn btn-primary btn-xs">
+                                    + Restock
+                                </a>
+                                <a href="{% url 'inventory:manual_adjustment' item.pk %}" class="btn btn-secondary btn-xs">
+                                    Adjust
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="form-card" style="text-align: center; padding: 48px 24px;">
+        <div class="card-icon" style="margin: 0 auto 16px; background-color: var(--success-light); color: var(--success); width: 56px; height: 56px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
+            Healthy Inventory Levels
+        </h3>
+        <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 20px;">
+            No items in {{ organization.name }} are currently at or below their reorder threshold.
+        </p>
+        <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline btn-sm">
+            View Complete Catalog
+        </a>
+    </div>
+{% endif %}
+
+<div style="margin-top: 24px; padding: 12px 16px; background-color: var(--border-light); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 10px;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span>
+        To adjust or reconfigure threshold levels, update records via the
+        <a href="{% url 'admin:inventory_inventoryitem_changelist' %}" target="_blank" rel="noopener" style="font-weight: 700;">Django Admin Catalog Manager</a>.
+    </span>
+</div>
+{% endblock %}

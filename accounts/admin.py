@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
+
 from .models import User
 
 
@@ -12,37 +13,37 @@ class UserAdmin(BaseUserAdmin):
     """
 
     list_display = (
-        'username',
-        'email',
-        'role',
-        'organization',
-        'phone_number',
-        'is_staff',
-        'is_active',
+        "username",
+        "email",
+        "role",
+        "organization",
+        "phone_number",
+        "is_staff",
+        "is_active",
     )
     list_filter = (
-        'role',
-        'organization',
-        'is_staff',
-        'is_superuser',
-        'is_active',
+        "role",
+        "organization",
+        "is_staff",
+        "is_superuser",
+        "is_active",
     )
     search_fields = (
-        'username',
-        'first_name',
-        'last_name',
-        'email',
-        'phone_number',
-        'organization__name',
+        "username",
+        "first_name",
+        "last_name",
+        "email",
+        "phone_number",
+        "organization__name",
     )
-    ordering = ('username',)
+    ordering = ("username",)
 
     # Add custom fields to change form
     fieldsets = BaseUserAdmin.fieldsets + (
         (
-            _('ReliefStock Role & Organization'),
+            _("ReliefStock Role & Organization"),
             {
-                'fields': ('role', 'organization', 'phone_number'),
+                "fields": ("role", "organization", "phone_number"),
             },
         ),
     )
@@ -50,10 +51,10 @@ class UserAdmin(BaseUserAdmin):
     # Add custom fields to create/add user form
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         (
-            _('ReliefStock Profile Details'),
+            _("ReliefStock Profile Details"),
             {
-                'classes': ('wide',),
-                'fields': ('role', 'organization', 'phone_number'),
+                "classes": ("wide",),
+                "fields": ("role", "organization", "phone_number"),
             },
         ),
     )

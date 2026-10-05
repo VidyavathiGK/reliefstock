@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}Executive Dashboard | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER BANNER -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Main Home</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Executive Operations Command</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            {{ organization.name }} &mdash; Operations Dashboard
+        </h1>
+        <p class="page-subtitle">
+            Live operational intelligence, catalog health metrics, inventory alerts, and monthly logistics throughput.
+        </p>
+    </div>
+
+    <div class="header-meta">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span><strong>Live As Of:</strong> {{ today|date:"F d, Y" }}</span>
+    </div>
+</section>
+
+<!-- SECTION 1: INVENTORY & STOCK OVERVIEW -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            1. Catalog &amp; Physical Stock Overview
+        </h3>
+        <p class="section-subtitle">Aggregated metrics across registered categories and warehouse shelves.</p>
+    </div>
+</div>
+
+<div class="metrics-grid">
+    <!-- Distinct Catalog Items -->
+    <div class="metric-card metric-card-primary">
+        <div class="metric-header">
+            <span class="metric-label">Distinct Catalog SKUs</span>
+            <div class="metric-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+            </div>
+        </div>
+        <div class="metric-value">{{ total_distinct_items }}</div>
+        <div class="metric-subtext">Registered catalog commodities</div>
+        <a href="{% url 'inventory:inventory_list' %}" class="metric-link" style="color: var(--primary);">
+            View Catalog &rarr;
+        </a>
+    </div>
+
+    <!-- Total Stock on Hand -->
+    <div class="metric-card metric-card-success">
+        <div class="metric-header">
+            <span class="metric-label">Total Stock Units</span>
+            <div class="metric-icon" style="background-color: var(--success-light); color: var(--success);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--success);">{{ total_stock_units }}</div>
+        <div class="metric-subtext">Aggregated units across all categories</div>
+        <a href="{% url 'inventory:inventory_list' %}" class="metric-link" style="color: var(--success);">
+            Inspect Balances &rarr;
+        </a>
+    </div>
+
+    <!-- Low Stock Items Alert -->
+    <div class="metric-card {% if low_stock_count > 0 %}metric-card-danger{% else %}metric-card-success{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Low Stock Warnings</span>
+            <div class="metric-icon" style="background-color: {% if low_stock_count > 0 %}var(--danger-light){% else %}var(--border-light){% endif %}; color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--text-subtle){% endif %};">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--text-main){% endif %};">
+            {{ low_stock_count }}
+        </div>
+        <div class="metric-subtext">
+            {% if low_stock_count > 0 %}
+                <span class="badge badge-danger">Needs Reorder</span>
+            {% else %}
+                <span class="badge badge-success">Sufficient Stock</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:low_stock_list' %}" class="metric-link" style="color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--text-muted){% endif %};">
+            View Low Stock Queue &rarr;
+        </a>
+    </div>
+</div>
+
+<!-- SECTION 2: URGENT ATTENTION & WORKFLOW QUEUES -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            2. Urgent Attention &amp; Workflow Queues
+        </h3>
+        <p class="section-subtitle">Items requiring administrative action, immediate dispatch, or safe disposal.</p>
+    </div>
+</div>
+
+<div class="metrics-grid">
+    <!-- Pending Review Requests -->
+    <div class="metric-card {% if pending_requests_count > 0 %}metric-card-primary{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Pending Review Requests</span>
+            <div class="metric-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="12" cy="14" r="2"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--primary);">{{ pending_requests_count }}</div>
+        <div class="metric-subtext">
+            {% if pending_requests_count > 0 %}
+                <span class="badge badge-primary">Awaiting Admin Decision</span>
+            {% else %}
+                <span class="badge badge-success">Queue Clear</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:distribution_request_list' %}?status=PENDING" class="metric-link" style="color: var(--primary);">
+            Review Requests Queue &rarr;
+        </a>
+    </div>
+
+    <!-- Expiring Soon (Next 7 Days) -->
+    <div class="metric-card {% if expiring_soon_count > 0 %}metric-card-warning{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Expiring Soon (7 Days)</span>
+            <div class="metric-icon" style="background-color: var(--warning-light); color: var(--warning);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--warning);">{{ expiring_soon_count }}</div>
+        <div class="metric-subtext">
+            {% if expiring_soon_count > 0 %}
+                <span class="badge badge-warning">Prioritize Dispatch</span>
+            {% else %}
+                <span class="badge badge-success">Fresh Inventory</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:expiring_stock_list' %}?filter=expiring_soon" class="metric-link" style="color: var(--warning);">
+            Inspect Batches &rarr;
+        </a>
+    </div>
+
+    <!-- Expired Goods -->
+    <div class="metric-card {% if expired_count > 0 %}metric-card-danger{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Expired Goods</span>
+            <div class="metric-icon" style="background-color: var(--danger-light); color: var(--danger);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--danger);">{{ expired_count }}</div>
+        <div class="metric-subtext">
+            {% if expired_count > 0 %}
+                <span class="badge badge-danger">Do Not Distribute</span>
+            {% else %}
+                <span class="badge badge-success">0 Expired Stock</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:expiring_stock_list' %}?filter=expired" class="metric-link" style="color: var(--danger);">
+            Review &amp; Discard &rarr;
+        </a>
+    </div>
+</div>
+
+<!-- SECTION 3: MONTHLY ACTIVITY METRICS -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            3. Monthly Operational Throughput ({{ today|date:"F Y" }})
+        </h3>
+        <p class="section-subtitle">Real-time ledger counts and movement for the current calendar month.</p>
+    </div>
+</div>
+
+<div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+    <!-- Inbound Donations -->
+    <div class="metric-card metric-card-success">
+        <div class="metric-header">
+            <span class="metric-label">Inbound Donations Intake</span>
+            <div class="metric-icon" style="background-color: var(--success-light); color: var(--success);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--success);">
+            {{ donations_this_month_count }} <span style="font-size: 1rem; font-weight: 600; color: var(--text-muted);">event(s)</span>
+        </div>
+        <div class="metric-subtext" style="font-size: 0.95rem; margin-top: 4px;">
+            Total Units Inbound: <strong style="color: var(--success); font-size: 1.1rem; margin-left: 4px;">+{{ items_donated_this_month }}</strong>
+        </div>
+        <a href="{% url 'inventory:report_donations' %}" class="metric-link" style="color: var(--success);">
+            Open Donations Report &rarr;
+        </a>
+    </div>
+
+    <!-- Outbound Distributions -->
+    <div class="metric-card metric-card-primary">
+        <div class="metric-header">
+            <span class="metric-label">Outbound Relief Dispatches</span>
+            <div class="metric-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--primary);">
+            {{ distributions_this_month_count }} <span style="font-size: 1rem; font-weight: 600; color: var(--text-muted);">dispatch(es)</span>
+        </div>
+        <div class="metric-subtext" style="font-size: 0.95rem; margin-top: 4px;">
+            Total Units Outbound: <strong style="color: var(--primary); font-size: 1.1rem; margin-left: 4px;">-{{ items_distributed_this_month }}</strong>
+        </div>
+        <a href="{% url 'inventory:report_distributions' %}" class="metric-link" style="color: var(--primary);">
+            Open Distributions Report &rarr;
+        </a>
+    </div>
+</div>
+
+<!-- SECTION 4: EXPORTABLE REPORTS QUICK ACCESS -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            4. Management Reports &amp; Data Exports
+        </h3>
+        <p class="section-subtitle">Generate real-time audit reports and export to spreadsheets or print-ready PDF files.</p>
+    </div>
+</div>
+
+<div class="reports-grid">
+    <!-- Report 1: Inventory Stock -->
+    <div class="report-card">
+        <div>
+            <div class="report-card-header">
+                <div class="card-icon icon-inventory" style="width: 40px; height: 40px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                </div>
+                <div class="report-card-title">Inventory Stock Report</div>
+            </div>
+            <p class="report-card-desc">
+                Comprehensive stock levels, categories, unit counts, thresholds, and current deficit status for all inventory items.
+            </p>
+        </div>
+        <div class="report-actions">
+            <a href="{% url 'inventory:report_inventory' %}" class="btn btn-primary btn-sm">
+                View Report
+            </a>
+            <a href="{% url 'inventory:report_inventory' %}?format=csv" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+            </a>
+            <a href="{% url 'inventory:report_inventory' %}?format=pdf" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Report 2: Donations History -->
+    <div class="report-card">
+        <div>
+            <div class="report-card-header">
+                <div class="card-icon icon-donations" style="width: 40px; height: 40px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                </div>
+                <div class="report-card-title">Donation History Report</div>
+            </div>
+            <p class="report-card-desc">
+                Inbound donation drop-offs with donor details, item quantities, and date-range filtering for financial and NGO audits.
+            </p>
+        </div>
+        <div class="report-actions">
+            <a href="{% url 'inventory:report_donations' %}" class="btn btn-primary btn-sm">
+                View Report
+            </a>
+            <a href="{% url 'inventory:report_donations' %}?format=csv" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+            </a>
+            <a href="{% url 'inventory:report_donations' %}?format=pdf" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Report 3: Distribution History -->
+    <div class="report-card">
+        <div>
+            <div class="report-card-header">
+                <div class="card-icon icon-distrib" style="width: 40px; height: 40px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                </div>
+                <div class="report-card-title">Distribution History Report</div>
+            </div>
+            <p class="report-card-desc">
+                Audit log of fulfilled relief supplies, recipient organization/shelter names, approval timestamps, and line-item totals.
+            </p>
+        </div>
+        <div class="report-actions">
+            <a href="{% url 'inventory:report_distributions' %}" class="btn btn-primary btn-sm">
+                View Report
+            </a>
+            <a href="{% url 'inventory:report_distributions' %}?format=csv" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+            </a>
+            <a href="{% url 'inventory:report_distributions' %}?format=pdf" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                PDF
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

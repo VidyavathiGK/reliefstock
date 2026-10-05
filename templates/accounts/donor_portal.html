@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Portal &amp; Contribution History | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Home</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Donor Portal</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success);"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            Welcome, {{ user.get_full_name|default:user.username }}
+        </h1>
+        <p class="page-subtitle">
+            Thank you for your generous contributions to community relief shelters and food banks.
+        </p>
+    </div>
+</section>
+
+<!-- CONTRIBUTION METRIC BANNER -->
+<div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    <div class="metric-card metric-card-success">
+        <div class="metric-header">
+            <span class="metric-label">Verified Lifetime Contributions</span>
+            <div class="metric-icon" style="background-color: var(--success-light); color: var(--success);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--success);">
+            {{ total_donations_count }} <span style="font-size: 1.1rem; font-weight: 600; color: var(--text-muted);">Event{{ total_donations_count|pluralize }}</span>
+        </div>
+        <div class="metric-subtext">Official receipts for tax and charitable deduction tracking.</div>
+    </div>
+</div>
+
+<!-- CONTRIBUTION HISTORY TABLE -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            Your Contribution History
+        </h3>
+        <p class="section-subtitle">Official records of donations associated with your account.</p>
+    </div>
+</div>
+
+{% if donations %}
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">Receipt #</th>
+                    <th>Date Received</th>
+                    <th>Receiving Organization</th>
+                    <th>Items &amp; Quantities Contributed</th>
+                    <th>Drop-off Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in donations %}
+                    <tr>
+                        <td style="font-weight: 700; color: var(--text-subtle);">#{{ d.pk }}</td>
+                        <td style="white-space: nowrap;">{{ d.date_received }}</td>
+                        <td>
+                            <strong>{{ d.organization.name }}</strong>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ d.organization.get_org_type_display }}</div>
+                        </td>
+                        <td>
+                            <ul style="margin: 0; padding-left: 16px; font-size: 0.88rem;">
+                                {% for txn in d.stock_transactions.all %}
+                                    <li>
+                                        <strong>{{ txn.quantity }} {{ txn.inventory_item.unit_of_measure }}</strong>
+                                        of {{ txn.inventory_item.name }}
+                                    </li>
+                                {% empty %}
+                                    <li><em style="color: var(--text-subtle);">Items logged under general intake</em></li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">
+                            {{ d.notes|default:"General contribution accepted in good order." }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="form-card" style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <p style="margin-bottom: 8px; font-weight: 600; color: var(--text-main);">
+            No donation records currently linked to your username or email address ({{ user.email|default:"None on file" }}).
+        </p>
+        <p style="font-size: 0.85rem;">
+            When dropping off supplies at a participating relief facility, provide your username or email so staff can attribute the intake to your donor portal.
+        </p>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Perishable Expiry Tracking | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER & ACTION TOOLBAR -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Home</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--warning);">Perishable Inventory</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--warning);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            {{ organization.name }} &mdash; Perishable Expiry Tracking
+        </h1>
+        <p class="page-subtitle">
+            Batch-level expiration monitoring to prevent food spoilage, ensure health compliance, and expedite dispatch.
+        </p>
+    </div>
+
+    <!-- View Mode Filter Tabs -->
+    <div style="display: flex; align-items: center; gap: 8px; background-color: var(--border-light); padding: 4px; border-radius: var(--radius-md);">
+        <a href="{% url 'inventory:expiring_stock_list' %}?filter=expiring_soon" class="btn btn-sm {% if view_mode == 'expiring_soon' %}btn-primary{% else %}btn-outline{% endif %}" style="border: none;">
+            Expiring Soon (7 Days)
+        </a>
+        <a href="{% url 'inventory:expiring_stock_list' %}?filter=expired" class="btn btn-sm {% if view_mode == 'expired' %}btn-primary{% else %}btn-outline{% endif %}" style="border: none;">
+            Already Expired
+        </a>
+    </div>
+</section>
+
+<!-- FILTER DESCRIPTION CALLOUT -->
+<div style="margin-bottom: 24px;">
+    {% if view_mode == 'expiring_soon' %}
+        <div class="alert-message alert-warning" style="margin-bottom: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>Showing stock batches expiring between <strong>{{ today|date:"Y-m-d" }}</strong> and <strong>{{ seven_days|date:"Y-m-d" }}</strong>. Prioritize these for distribution immediately.</span>
+        </div>
+    {% else %}
+        <div class="alert-message alert-error" style="margin-bottom: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span>Showing perishable stock batches where the expiry date passed before <strong>{{ today|date:"Y-m-d" }}</strong>. Staff should inspect and discard or adjust out spoiled items.</span>
+        </div>
+    {% endif %}
+</div>
+
+<!-- DATA TABLE -->
+{% if annotated_txns %}
+    <div class="table-card">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Batch Expiry Date</th>
+                    <th>Urgency Status</th>
+                    <th>Batch Qty</th>
+                    <th>Total Item Stock</th>
+                    <th>Intake / Batch Note</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in annotated_txns %}
+                    <tr style="background-color: {% if item.is_overdue %}#fef2f2{% elif item.days_diff <= 2 %}#fffbeb{% endif %};">
+                        <td>
+                            <strong style="font-size: 1rem;">
+                                <a href="{% url 'inventory:inventory_detail' item.txn.inventory_item.pk %}">
+                                    {{ item.txn.inventory_item.name }}
+                                </a>
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: var(--border-light); color: var(--text-muted);">
+                                {{ item.txn.inventory_item.category.name }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong style="color: var(--text-main);">
+                                {{ item.txn.expiry_date|date:"Y-m-d" }}
+                            </strong>
+                        </td>
+                        <td>
+                            {% if item.is_overdue %}
+                                <span class="badge badge-danger">
+                                    EXPIRED ({{ item.abs_days }} day{{ item.abs_days|pluralize }} ago)
+                                </span>
+                            {% elif item.days_diff == 0 %}
+                                <span class="badge badge-warning" style="background-color: #fef08a; color: #854d0e;">
+                                    EXPIRES TODAY!
+                                </span>
+                            {% elif item.days_diff == 1 %}
+                                <span class="badge badge-warning">
+                                    Expires Tomorrow (1 day left)
+                                </span>
+                            {% else %}
+                                <span class="badge" style="background-color: #fef9c3; color: #854d0e;">
+                                    Expires in {{ item.days_diff }} days
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 600;">
+                            {{ item.txn.quantity }} {{ item.txn.inventory_item.unit_of_measure }}
+                        </td>
+                        <td style="color: var(--text-muted);">
+                            {{ item.item_stock }} {{ item.txn.inventory_item.unit_of_measure }}
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                {{ item.txn.note|default:"—" }}
+                                {% if item.txn.donation %}
+                                    <div style="font-size: 0.75rem; color: var(--text-subtle);">
+                                        Donation #{{ item.txn.donation.pk }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td style="text-align: right;">
+                            <a href="{% url 'inventory:manual_adjustment' item.txn.inventory_item.pk %}" class="btn btn-secondary btn-xs">
+                                Adjust / Discard
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="form-card" style="text-align: center; padding: 48px 24px;">
+        <div class="card-icon" style="margin: 0 auto 16px; background-color: var(--success-light); color: var(--success); width: 56px; height: 56px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
+            {% if view_mode == 'expiring_soon' %}
+                No Batches Expiring in the Next 7 Days
+            {% else %}
+                No Expired Perishable Batches Found
+            {% endif %}
+        </h3>
+        <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 20px;">
+            {% if view_mode == 'expiring_soon' %}
+                All perishable stock batches have safe validity beyond the 7-day window.
+            {% else %}
+                All tracked perishables are currently fresh and within acceptable dates.
+            {% endif %}
+        </p>
+        <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline btn-sm">
+            View Complete Catalog
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

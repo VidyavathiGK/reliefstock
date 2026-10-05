@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}New Distribution Request | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER & BREADCRUMB -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'inventory:distribution_request_list' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Back to Requests</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Aid Application</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create Distribution Request
+        </h1>
+        <p class="page-subtitle">
+            Submit a formal aid requisition from <strong>{{ organization.name }}</strong> for client distribution.
+        </p>
+    </div>
+</section>
+
+<form method="post" action="{% url 'inventory:distribution_request_create' %}">
+    {% csrf_token %}
+
+    <!-- 1. RECIPIENT INFORMATION -->
+    <div class="form-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            1. Recipient &amp; Case Information
+        </h3>
+
+        {% if header_form.non_field_errors %}
+            <div class="alert-message alert-error" style="margin-bottom: 16px;">{{ header_form.non_field_errors }}</div>
+        {% endif %}
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            <div class="form-group">
+                <label class="form-label">{{ header_form.recipient_name.label }}</label>
+                {{ header_form.recipient_name }}
+                {% if header_form.recipient_name.help_text %}<small style="color: var(--text-subtle);">{{ header_form.recipient_name.help_text }}</small>{% endif %}
+                {% if header_form.recipient_name.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.recipient_name.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ header_form.recipient_contact.label }}</label>
+                {{ header_form.recipient_contact }}
+                {% if header_form.recipient_contact.help_text %}<small style="color: var(--text-subtle);">{{ header_form.recipient_contact.help_text }}</small>{% endif %}
+                {% if header_form.recipient_contact.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.recipient_contact.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">{{ header_form.notes.label }}</label>
+            {{ header_form.notes }}
+            {% if header_form.notes.help_text %}<small style="color: var(--text-subtle);">{{ header_form.notes.help_text }}</small>{% endif %}
+            {% if header_form.notes.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.notes.errors }}</div>{% endif %}
+        </div>
+    </div>
+
+    <!-- 2. REQUESTED ITEMS & QUANTITIES -->
+    <div class="form-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            2. Requested Items &amp; Quantities
+        </h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+            Select the catalog commodities needed and specified target quantities.
+        </p>
+
+        {{ formset.management_form }}
+
+        {% if formset.non_form_errors %}
+            <div class="alert-message alert-error">{{ formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="table-card" style="box-shadow: none; border-radius: var(--radius-md);">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Catalog Item</th>
+                        <th style="width: 200px;">Quantity Requested</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in formset %}
+                        <tr>
+                            <td style="font-weight: 700; color: var(--text-subtle); text-align: center;">{{ forloop.counter }}</td>
+                            <td>
+                                {{ form.inventory_item }}
+                                {% if form.inventory_item.errors %}
+                                    <div style="color: var(--danger); font-size: 0.78rem;">{{ form.inventory_item.errors }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ form.quantity_requested }}
+                                {% if form.quantity_requested.errors %}
+                                    <div style="color: var(--danger); font-size: 0.78rem;">{{ form.quantity_requested.errors }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div style="display: flex; align-items: center; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+            Submit Distribution Request
+        </button>
+        <a href="{% url 'inventory:distribution_request_list' %}" class="btn btn-secondary">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

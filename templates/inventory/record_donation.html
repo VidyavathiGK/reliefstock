@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Record Inbound Donation | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER & BREADCRUMB -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Home</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Donations Intake</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Record Inbound Donation
+        </h1>
+        <p class="page-subtitle">
+            Log incoming drop-offs for <strong>{{ organization.name }}</strong> with automatic stock ledger integration.
+        </p>
+    </div>
+</section>
+
+<form method="post" action="{% url 'inventory:record_donation' %}">
+    {% csrf_token %}
+
+    <!-- 1. DONOR & DROP-OFF INFORMATION -->
+    <div class="form-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            1. Donor &amp; Drop-off Information
+        </h3>
+
+        {% if header_form.non_field_errors %}
+            <div class="alert-message alert-error">{{ header_form.non_field_errors }}</div>
+        {% endif %}
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+            {% if header_form.donor_user %}
+                <div class="form-group">
+                    <label class="form-label">{{ header_form.donor_user.label }}</label>
+                    {{ header_form.donor_user }}
+                    {% if header_form.donor_user.help_text %}<small style="color: var(--text-subtle);">{{ header_form.donor_user.help_text }}</small>{% endif %}
+                    {% if header_form.donor_user.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.donor_user.errors }}</div>{% endif %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label">{{ header_form.donor_name.label }}</label>
+                {{ header_form.donor_name }}
+                {% if header_form.donor_name.help_text %}<small style="color: var(--text-subtle);">{{ header_form.donor_name.help_text }}</small>{% endif %}
+                {% if header_form.donor_name.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.donor_name.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ header_form.donor_contact.label }}</label>
+                {{ header_form.donor_contact }}
+                {% if header_form.donor_contact.help_text %}<small style="color: var(--text-subtle);">{{ header_form.donor_contact.help_text }}</small>{% endif %}
+                {% if header_form.donor_contact.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.donor_contact.errors }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ header_form.date_received.label }}</label>
+                {{ header_form.date_received }}
+                {% if header_form.date_received.help_text %}<small style="color: var(--text-subtle);">{{ header_form.date_received.help_text }}</small>{% endif %}
+                {% if header_form.date_received.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.date_received.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">{{ header_form.notes.label }}</label>
+            {{ header_form.notes }}
+            {% if header_form.notes.help_text %}<small style="color: var(--text-subtle);">{{ header_form.notes.help_text }}</small>{% endif %}
+            {% if header_form.notes.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ header_form.notes.errors }}</div>{% endif %}
+        </div>
+    </div>
+
+    <!-- 2. DONATED ITEMS & QUANTITIES -->
+    <div class="form-card">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            2. Donated Items &amp; Quantities
+        </h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+            Fill in as many rows as needed. At least one row with an item and valid quantity is required.
+        </p>
+
+        {{ formset.management_form }}
+
+        {% if formset.non_form_errors %}
+            <div class="alert-message alert-error">{{ formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="table-card" style="box-shadow: none; border-radius: var(--radius-md);">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">#</th>
+                        <th>Catalog Item</th>
+                        <th style="width: 130px;">Quantity</th>
+                        <th style="width: 180px;">Expiry Date</th>
+                        <th>Line Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in formset %}
+                        <tr>
+                            <td style="font-weight: 700; color: var(--text-subtle);">{{ forloop.counter }}</td>
+                            <td>
+                                {{ form.inventory_item }}
+                                {% if form.inventory_item.errors %}
+                                    <div style="color: var(--danger); font-size: 0.78rem;">{{ form.inventory_item.errors }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ form.quantity }}
+                                {% if form.quantity.errors %}
+                                    <div style="color: var(--danger); font-size: 0.78rem;">{{ form.quantity.errors }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ form.expiry_date }}
+                                {% if form.expiry_date.errors %}
+                                    <div style="color: var(--danger); font-size: 0.78rem;">{{ form.expiry_date.errors }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ form.note }}
+                                {% if form.note.errors %}
+                                    <div style="color: var(--danger); font-size: 0.78rem;">{{ form.note.errors }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div style="display: flex; align-items: center; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-primary" style="padding: 12px 24px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Donation &amp; Update Stock
+        </button>
+        {% if user.role == 'STAFF' or user.role == 'ADMIN' or user.is_superuser %}
+            <a href="{% url 'inventory:inventory_list' %}" class="btn btn-secondary">Cancel</a>
+        {% else %}
+            <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}

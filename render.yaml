@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: reliefstock
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn reliefstock.wsgi:application"
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: DB_ENGINE
+        value: "django.db.backends.postgresql"
+      - key: DB_NAME
+        fromDatabase:
+          name: reliefstock-postgres
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: reliefstock-postgres
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: reliefstock-postgres
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: reliefstock-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: reliefstock-postgres
+          property: port
+
+databases:
+  - name: reliefstock-postgres
+    databaseName: reliefstock_db
+    user: reliefstock_user
+    plan: free

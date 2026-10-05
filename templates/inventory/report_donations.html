@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Donation History Report | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'inventory:dashboard' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Back to Dashboard</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Inbound Intake</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            {{ organization.name }} &mdash; Donation History Report
+        </h1>
+        <p class="page-subtitle">
+            Historical audit log of inbound community donations, date-range filtering, and atomic ledger items.
+        </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="{% url 'inventory:report_donations' %}?format=csv&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&query={{ request.GET.query }}" class="btn btn-outline btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download CSV
+        </a>
+        <a href="{% url 'inventory:report_donations' %}?format=pdf&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&query={{ request.GET.query }}" class="btn btn-primary btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Download PDF
+        </a>
+    </div>
+</section>
+
+<!-- FILTER FORM -->
+<div class="form-card" style="padding: 18px 24px; margin-bottom: 24px;">
+    <form method="get" action="{% url 'inventory:report_donations' %}" style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label">{{ form.start_date.label }}</label>
+            {{ form.start_date }}
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label">{{ form.end_date.label }}</label>
+            {{ form.end_date }}
+        </div>
+        <div style="flex: 2; min-width: 200px;">
+            <label class="form-label">{{ form.query.label }}</label>
+            {{ form.query }}
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn btn-primary btn-sm" style="padding: 10px 16px;">
+                Apply Filter
+            </button>
+            <a href="{% url 'inventory:report_donations' %}" class="btn btn-secondary btn-sm" style="padding: 10px 14px;">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- REPORT DATA TABLE -->
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 70px;">ID</th>
+                <th>Date Received</th>
+                <th>Donor Name</th>
+                <th>Contact</th>
+                <th>Registered Donor</th>
+                <th>Items &amp; Quantities</th>
+                <th>Recorded By</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in donations %}
+                <tr>
+                    <td style="font-weight: 700; color: var(--text-subtle);">#{{ d.pk }}</td>
+                    <td style="white-space: nowrap;">{{ d.date_received }}</td>
+                    <td><strong>{{ d.donor_name|default:"Anonymous" }}</strong></td>
+                    <td style="color: var(--text-muted);">{{ d.donor_contact|default:"—" }}</td>
+                    <td>
+                        {% if d.donor_user %}
+                            <span class="badge badge-primary">{{ d.donor_user.username }}</span>
+                        {% else %}
+                            <span style="color: var(--text-subtle);">&mdash;</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <ul style="margin: 0; padding-left: 16px; font-size: 0.88rem;">
+                            {% for txn in d.stock_transactions.all %}
+                                <li>{{ txn.inventory_item.name }}: <strong>{{ txn.quantity }} {{ txn.inventory_item.unit_of_measure }}</strong></li>
+                            {% empty %}
+                                <li><em style="color: var(--text-subtle);">No items recorded</em></li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td style="font-size: 0.88rem; color: var(--text-muted);">{{ d.recorded_by.username }}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-muted);">{{ d.notes|default:"—" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No donations found matching the specified date range.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

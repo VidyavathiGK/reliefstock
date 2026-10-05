@@ -1,4 +1,5 @@
 from django.test import TestCase
+
 from organizations.models import Organization
 
 
@@ -13,7 +14,7 @@ class OrganizationModelTests(TestCase):
             org_type=Organization.OrgType.SHELTER,
             address="456 Beacon Blvd",
             contact_email="hope@shelter.org",
-            contact_phone="555-0155"
+            contact_phone="555-0155",
         )
         self.assertEqual(str(org), "Shelter of Hope (Emergency Shelter)")
         self.assertEqual(org.org_type, "SHELTER")

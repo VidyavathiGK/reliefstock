@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Adjust Stock — {{ item.name }} | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER & BREADCRUMB -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'inventory:inventory_detail' item.pk %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Back to {{ item.name }}</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Stock Correction</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Manual Stock Adjustment: {{ item.name }}
+        </h1>
+        <p class="page-subtitle">
+            Perform audited stock counts, damage write-offs, or reconciliation adjustments with mandatory reason notes.
+        </p>
+    </div>
+</section>
+
+<!-- ITEM QUICK METRIC INFO -->
+<div class="header-meta" style="margin-bottom: 24px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+        <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-subtle);">Current Available Stock</span>
+        <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">
+            {{ current_stock }} <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-muted);">{{ item.unit_of_measure }}</span>
+        </div>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <span class="badge" style="background-color: var(--border-light); color: var(--text-muted); padding: 6px 12px;">
+            Category: {{ item.category.name }}
+        </span>
+        <span class="badge {% if item.is_perishable %}badge-warning{% else %}badge-primary{% endif %}" style="padding: 6px 12px;">
+            {{ item.is_perishable|yesno:"Perishable,Non-Perishable" }}
+        </span>
+    </div>
+</div>
+
+<div class="form-card" style="max-width: 640px;">
+    <form method="post" action="{% url 'inventory:manual_adjustment' item.pk %}">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert-message alert-error" style="margin-bottom: 20px;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label">{{ form.transaction_type.label }}</label>
+            {{ form.transaction_type }}
+            {% if form.transaction_type.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ form.transaction_type.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{{ form.quantity.label }} (in {{ item.unit_of_measure }})</label>
+            {{ form.quantity }}
+            {% if form.quantity.help_text %}<small style="color: var(--text-subtle); display: block; margin-top: 4px;">{{ form.quantity.help_text }}</small>{% endif %}
+            {% if form.quantity.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ form.quantity.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">{{ form.note.label }} <span style="color: var(--danger);">*</span></label>
+            {{ form.note }}
+            {% if form.note.help_text %}<small style="color: var(--text-subtle); display: block; margin-top: 4px;">{{ form.note.help_text }}</small>{% endif %}
+            {% if form.note.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ form.note.errors }}</div>{% endif %}
+        </div>
+
+        {% if item.is_perishable %}
+            <div class="form-group">
+                <label class="form-label">{{ form.expiry_date.label }}</label>
+                {{ form.expiry_date }}
+                {% if form.expiry_date.help_text %}<small style="color: var(--text-subtle); display: block; margin-top: 4px;">{{ form.expiry_date.help_text }}</small>{% endif %}
+                {% if form.expiry_date.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ form.expiry_date.errors }}</div>{% endif %}
+            </div>
+        {% endif %}
+
+        <div style="display: flex; align-items: center; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">
+                Apply Stock Adjustment
+            </button>
+            <a href="{% url 'inventory:inventory_detail' item.pk %}" class="btn btn-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

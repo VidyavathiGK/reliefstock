@@ -3,26 +3,275 @@
 {% block title %}Dashboard | ReliefStock{% endblock %}
 
 {% block content %}
-<h2>Logged in as {{ user.username }} ({{ user.role }})</h2>
+<!-- USER PROFILE HERO BANNER -->
+<section class="profile-hero">
+    <div class="profile-header">
+        <div class="profile-title-area">
+            <div class="profile-avatar-large">
+                {{ user.username|make_list|first|upper }}
+            </div>
+            <div>
+                <h2 class="profile-name">
+                    Welcome back, {{ user.first_name|default:user.username }}
+                    <span class="role-badge {% if user.role == 'ADMIN' %}badge-admin{% elif user.role == 'STAFF' %}badge-staff{% elif user.role == 'VOLUNTEER' %}badge-volunteer{% else %}badge-donor{% endif %}">
+                        {{ user.get_role_display }}
+                    </span>
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">
+                    Logged in as {{ user.username }} ({{ user.role }})
+                </p>
+            </div>
+        </div>
 
-<section>
-    <h3>User Profile Summary</h3>
-    <ul>
-        <li><strong>Username:</strong> {{ user.username }}</li>
-        <li><strong>Role:</strong> {{ user.get_role_display }} ({{ user.role }})</li>
-        <li><strong>Email:</strong> {{ user.email|default:"None specified" }}</li>
-        <li><strong>Phone Number:</strong> {{ user.phone_number|default:"None specified" }}</li>
-        <li><strong>Organization:</strong> 
-            {% if user.organization %}
-                {{ user.organization.name }} ({{ user.organization.get_org_type_display }})
-            {% else %}
-                <em>No organization assigned</em>
-            {% endif %}
-        </li>
-    </ul>
+        {% if user.role == 'ADMIN' or user.role == 'STAFF' or user.is_superuser %}
+            <a href="{% url 'inventory:dashboard' %}" class="card-action-btn" style="width: auto; background-color: var(--primary); color: white; padding: 10px 20px;">
+                <span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    Live Operations Dashboard
+                </span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        {% endif %}
+    </div>
 
-    <p>
-        <a href="{% url 'admin:index' %}">Go to Django Admin Panel</a> to manage Organizations, Inventory Items, Categories, and Users.
-    </p>
+    <!-- User Profile Summary Chips -->
+    <div class="profile-meta-grid">
+        <div class="meta-item">
+            <div class="meta-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="meta-content">
+                <span class="meta-label">Username</span>
+                <span class="meta-value">{{ user.username }}</span>
+            </div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="meta-content">
+                <span class="meta-label">Assigned Role</span>
+                <span class="meta-value">{{ user.get_role_display }} ({{ user.role }})</span>
+            </div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            </div>
+            <div class="meta-content">
+                <span class="meta-label">Email Address</span>
+                <span class="meta-value">{{ user.email|default:"None specified" }}</span>
+            </div>
+        </div>
+
+        <div class="meta-item">
+            <div class="meta-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <div class="meta-content">
+                <span class="meta-label">Phone Number</span>
+                <span class="meta-value">{{ user.phone_number|default:"None specified" }}</span>
+            </div>
+        </div>
+
+        <div class="meta-item" style="grid-column: 1 / -1;">
+            <div class="meta-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M9 17h1"/></svg>
+            </div>
+            <div class="meta-content">
+                <span class="meta-label">Organization Tenant</span>
+                <span class="meta-value" style="color: var(--primary); font-size: 1.05rem;">
+                    {% if user.organization %}
+                        {{ user.organization.name }} &bull; <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">{{ user.organization.get_org_type_display }}</span>
+                    {% else %}
+                        <em>No organization assigned</em>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
 </section>
+
+<!-- QUICK ACTIONS SECTION -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Quick Actions &amp; Operations
+        </h3>
+        <p class="section-subtitle">Select an operational workflow to manage inventory, distributions, or generate reports.</p>
+    </div>
+</div>
+
+<div class="actions-grid">
+    {% if user.role == 'ADMIN' or user.role == 'STAFF' or user.is_superuser %}
+        <!-- 1. Executive Dashboard -->
+        <div class="action-card card-highlight-primary">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-dashboard">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: var(--primary-light); color: var(--primary);">Live Metrics</span>
+                </div>
+                <div class="card-body">
+                    <h4>Executive Dashboard</h4>
+                    <p>Live operational summary of catalog inventory, low-stock warnings, pending approval queues, and monthly throughput.</p>
+                </div>
+            </div>
+            <a href="{% url 'inventory:dashboard' %}" class="card-action-btn">
+                <span>Open Dashboard</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+
+        <!-- 2. Inventory & Stock Levels -->
+        <div class="action-card">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-inventory">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: #f0fdfa; color: #0d9488;">Live Stock</span>
+                </div>
+                <div class="card-body">
+                    <h4>Inventory Management</h4>
+                    <p>Inspect real-time stock balances across all categories, review SKU audit logs, and execute manual adjustments.</p>
+                </div>
+            </div>
+            <a href="{% url 'inventory:inventory_list' %}" class="card-action-btn">
+                <span>View Inventory</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+
+        <!-- 3. Management Reports & Exports -->
+        <div class="action-card">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-reports">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: #f5f3ff; color: #7c3aed;">CSV &bull; PDF</span>
+                </div>
+                <div class="card-body">
+                    <h4>Reports &amp; Exports</h4>
+                    <p>Generate, filter, and export Inventory Stock, Inbound Donations, and Distribution history reports as CSV and formal PDF.</p>
+                </div>
+            </div>
+            <a href="{% url 'inventory:report_inventory' %}" class="card-action-btn">
+                <span>Access Reports</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+    {% endif %}
+
+    {% if user.role == 'ADMIN' or user.role == 'STAFF' or user.role == 'VOLUNTEER' or user.is_superuser %}
+        <!-- 4. Record Inbound Donation -->
+        <div class="action-card card-highlight-success">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-donations">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: #f0fdf4; color: #16a34a;">Intake</span>
+                </div>
+                <div class="card-body">
+                    <h4>Record Inbound Donation</h4>
+                    <p>Log drop-offs from community donors with multi-item quantities, expiry dates, and atomic stock ledger creation.</p>
+                </div>
+            </div>
+            <a href="{% url 'inventory:record_donation' %}" class="card-action-btn">
+                <span>+ Log New Donation</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+
+        <!-- 5. Distribution Requests -->
+        <div class="action-card">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-distrib">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: #e0f2fe; color: #0284c7;">Aid Dispatch</span>
+                </div>
+                <div class="card-body">
+                    <h4>Distribution Requests</h4>
+                    <p>Request relief supplies for recipients, track approval status, and record partial or full warehouse fulfillment.</p>
+                </div>
+            </div>
+            <a href="{% url 'inventory:distribution_request_list' %}" class="card-action-btn">
+                <span>Manage Requests</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+    {% endif %}
+
+    {% if user.role == 'ADMIN' or user.role == 'STAFF' or user.is_superuser %}
+        <!-- 6. Low Stock Alerts -->
+        <div class="action-card card-highlight-warning">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-lowstock">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: var(--warning-light); color: var(--warning);">Restock Alert</span>
+                </div>
+                <div class="card-body">
+                    <h4>Low Stock Alerts</h4>
+                    <p>Identify inventory items at or below their configured reorder thresholds, sorted by greatest calculated deficit.</p>
+                </div>
+            </div>
+            <a href="{% url 'inventory:low_stock_list' %}" class="card-action-btn">
+                <span>Inspect Low Stock</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+
+        <!-- 7. Perishable Expiry Tracking -->
+        <div class="action-card card-highlight-danger">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-expiry">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: var(--danger-light); color: var(--danger);">Perishables</span>
+                </div>
+                <div class="card-body">
+                    <h4>Perishable Expiry Tracking</h4>
+                    <p>Track perishable items expiring within the next 7 days to prioritize immediate dispatch, plus review expired batches.</p>
+                </div>
+            </div>
+            <a href="{% url 'inventory:expiring_stock_list' %}" class="card-action-btn">
+                <span>Track Expirations</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+    {% endif %}
+
+    {% if user.is_staff or user.is_superuser %}
+        <!-- 8. Django Admin Portal -->
+        <div class="action-card">
+            <div>
+                <div class="card-top">
+                    <div class="card-icon icon-admin">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <span class="card-badge" style="background-color: #f1f5f9; color: #475569;">Admin Access</span>
+                </div>
+                <div class="card-body">
+                    <h4>Django Admin Portal</h4>
+                    <p>Administrative console for managing relief organizations, catalog categories, user roles, and low-level database audits.</p>
+                </div>
+            </div>
+            <a href="{% url 'admin:index' %}" class="card-action-btn" target="_blank" rel="noopener">
+                <span>Admin Console</span>
+                <span class="arrow">&rarr;</span>
+            </a>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

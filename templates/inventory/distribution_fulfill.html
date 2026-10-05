@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Fulfill Request #{{ dist_req.pk }} | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER & BREADCRUMB -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'inventory:distribution_request_detail' dist_req.pk %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Back to Request #{{ dist_req.pk }}</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Warehouse Dispatch</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success);"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+            Fulfill Distribution Request #{{ dist_req.pk }}
+        </h1>
+        <p class="page-subtitle">
+            Dispatch relief supplies for <strong>{{ dist_req.recipient_name }}</strong> and create atomic stock deduction entries.
+        </p>
+    </div>
+</section>
+
+<!-- INVENTORY POLICY ALERT -->
+<div class="alert-message alert-info" style="margin-bottom: 24px;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span>
+        <strong>Inventory Policy:</strong> Dispatch quantity cannot exceed current available warehouse stock. Partial fulfillments are supported; requests stay Approved until all balances are fulfilled.
+    </span>
+</div>
+
+<form method="post" action="{% url 'inventory:distribution_request_fulfill' dist_req.pk %}">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert-message alert-error" style="margin-bottom: 20px;">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="table-card" style="margin-bottom: 24px;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Requested</th>
+                    <th>Previously Fulfilled</th>
+                    <th>Remaining Needed</th>
+                    <th>Available Stock</th>
+                    <th style="width: 240px;">Quantity to Dispatch Now</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in lines_info %}
+                    <tr {% if row.line.is_fully_fulfilled %}style="background-color: #f8fafc; color: var(--text-subtle);"{% endif %}>
+                        <td>
+                            <strong style="font-size: 0.98rem; color: var(--text-main);">{{ row.line.inventory_item.name }}</strong>
+                            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ row.line.inventory_item.category.name }}</div>
+                        </td>
+                        <td style="font-weight: 600;">{{ row.line.quantity_requested }} {{ row.line.inventory_item.unit_of_measure }}</td>
+                        <td style="color: var(--text-muted);">{{ row.line.quantity_fulfilled|default:"0.00" }} {{ row.line.inventory_item.unit_of_measure }}</td>
+                        <td>
+                            <strong style="color: var(--primary);">{{ row.line.quantity_remaining }} {{ row.line.inventory_item.unit_of_measure }}</strong>
+                        </td>
+                        <td>
+                            <strong>{{ row.current_stock }} {{ row.line.inventory_item.unit_of_measure }}</strong>
+                            {% if row.current_stock < row.line.quantity_remaining and not row.line.is_fully_fulfilled %}
+                                <div style="margin-top: 4px;">
+                                    <span class="badge badge-danger">Shortage: {{ row.current_stock }} on hand</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.line.is_fully_fulfilled %}
+                                <span class="badge badge-success">Fully Satisfied</span>
+                            {% elif row.field %}
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    {{ row.field }}
+                                    <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">{{ row.line.inventory_item.unit_of_measure }}</span>
+                                </div>
+                                {% if row.field.errors %}
+                                    <div style="color: var(--danger); font-size: 0.78rem; margin-top: 4px;">{{ row.field.errors }}</div>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="form-card" style="max-width: 640px; margin-bottom: 24px;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">{{ form.fulfillment_note.label }}</label>
+            {{ form.fulfillment_note }}
+            {% if form.fulfillment_note.help_text %}<small style="color: var(--text-subtle); display: block; margin-top: 4px;">{{ form.fulfillment_note.help_text }}</small>{% endif %}
+            {% if form.fulfillment_note.errors %}<div style="color: var(--danger); font-size: 0.82rem; margin-top: 4px;">{{ form.fulfillment_note.errors }}</div>{% endif %}
+        </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <button type="submit" class="btn btn-primary" style="background-color: var(--success); border-color: var(--success); padding: 12px 24px;">
+            Confirm Dispatch &amp; Deduct Stock
+        </button>
+        <a href="{% url 'inventory:distribution_request_detail' dist_req.pk %}" class="btn btn-secondary">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

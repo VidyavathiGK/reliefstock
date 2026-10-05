@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Distribution History Report | ReliefStock{% endblock %}
+
+{% block content %}
+<!-- PAGE HEADER -->
+<section class="page-header">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+            <a href="{% url 'inventory:dashboard' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Back to Dashboard</a>
+            <span style="color: var(--text-subtle);">&bull;</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Outbound Relief</span>
+        </div>
+        <h1 class="page-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            {{ organization.name }} &mdash; Distribution History Report
+        </h1>
+        <p class="page-subtitle">
+            Auditing log of fulfilled aid distributions, recipient programs, and authorized personnel.
+        </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <a href="{% url 'inventory:report_distributions' %}?format=csv&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&query={{ request.GET.query }}" class="btn btn-outline btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download CSV
+        </a>
+        <a href="{% url 'inventory:report_distributions' %}?format=pdf&start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&query={{ request.GET.query }}" class="btn btn-primary btn-sm">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Download PDF
+        </a>
+    </div>
+</section>
+
+<!-- FILTER FORM -->
+<div class="form-card" style="padding: 18px 24px; margin-bottom: 24px;">
+    <form method="get" action="{% url 'inventory:report_distributions' %}" style="display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label">{{ form.start_date.label }}</label>
+            {{ form.start_date }}
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label">{{ form.end_date.label }}</label>
+            {{ form.end_date }}
+        </div>
+        <div style="flex: 2; min-width: 200px;">
+            <label class="form-label">{{ form.query.label }}</label>
+            {{ form.query }}
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn btn-primary btn-sm" style="padding: 10px 16px;">
+                Apply Filter
+            </button>
+            <a href="{% url 'inventory:report_distributions' %}" class="btn btn-secondary btn-sm" style="padding: 10px 14px;">
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- REPORT DATA TABLE -->
+<div class="table-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 70px;">ID</th>
+                <th>Requested</th>
+                <th>Reviewed</th>
+                <th>Recipient / Case</th>
+                <th>Contact</th>
+                <th>Fulfilled Supplies</th>
+                <th>Requested By</th>
+                <th>Reviewed By</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dist in distributions %}
+                <tr>
+                    <td style="font-weight: 700; color: var(--text-subtle);">#{{ dist.pk }}</td>
+                    <td style="white-space: nowrap; font-size: 0.85rem;">{{ dist.requested_at|date:"Y-m-d" }}</td>
+                    <td style="white-space: nowrap; font-size: 0.85rem;">{{ dist.reviewed_at|date:"Y-m-d"|default:"—" }}</td>
+                    <td>
+                        <strong style="font-size: 0.98rem;">
+                            <a href="{% url 'inventory:distribution_request_detail' dist.pk %}">{{ dist.recipient_name }}</a>
+                        </strong>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">{{ dist.recipient_contact|default:"—" }}</td>
+                    <td>
+                        <ul style="margin: 0; padding-left: 16px; font-size: 0.88rem;">
+                            {% for item in dist.items.all %}
+                                <li>{{ item.inventory_item.name }}: <strong>{{ item.quantity_fulfilled }} {{ item.inventory_item.unit_of_measure }}</strong></li>
+                            {% empty %}
+                                <li><em style="color: var(--text-subtle);">None logged</em></li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td style="font-size: 0.88rem; color: var(--text-muted);">{{ dist.requested_by.username }}</td>
+                    <td style="font-size: 0.88rem; color: var(--text-muted);">{{ dist.reviewed_by.username|default:"—" }}</td>
+                    <td>
+                        <span class="badge badge-success">
+                            {{ dist.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        No fulfilled distribution records found matching the specified date range.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
