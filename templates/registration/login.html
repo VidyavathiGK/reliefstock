@@ -31,8 +31,8 @@
         <form method="post" action="{% url 'login' %}">
             {% csrf_token %}
             <div class="form-group">
-                <label class="form-label" for="id_username">Username</label>
-                <input type="text" name="username" autofocus autofocus required id="id_username" placeholder="Enter your username" class="form-input">
+                <label class="form-label" for="id_username">Username or Email</label>
+                <input type="text" name="username" autofocus required id="id_username" placeholder="admin or vidyavidyavathigk@gmail.com" class="form-input">
             </div>
 
             <div class="form-group" style="margin-bottom: 24px;">
@@ -44,6 +44,12 @@
                 Log In
             </button>
         </form>
+
+        <div style="margin-top: 16px; padding: 10px 14px; background-color: var(--primary-light); border: 1px solid var(--primary-border); border-radius: var(--radius-md); font-size: 0.82rem; color: var(--primary);">
+            <strong>Demo / Admin Credentials:</strong><br>
+            Username: <code>admin</code> or <code>vidyavidyavathigk@gmail.com</code><br>
+            Password: <code>admin123</code>
+        </div>
 
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-light); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
             Need an account? User accounts and roles are provisioned by an administrator via the
