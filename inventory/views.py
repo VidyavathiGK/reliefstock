@@ -25,6 +25,7 @@ from .forms import (
     ManualStockAdjustmentForm,
 )
 from .models import (
+    Category,
     DistributionRequest,
     DistributionRequestItem,
     Donation,
@@ -77,12 +78,15 @@ def inventory_list(request):
         .order_by("category__name", "name")
     )
 
+    categories = Category.objects.filter(items__organization=user_org).distinct().order_by("name")
+
     return render(
         request,
         "inventory/inventory_list.html",
         {
             "items": items,
             "organization": user_org,
+            "categories": categories,
         },
     )
 
@@ -736,6 +740,44 @@ def dashboard(request):
         created_at__month=today.month,
     ).aggregate(total=Sum("quantity"))["total"] or Decimal("0.00")
 
+    # 6. Critical Low Stock items (sorted by largest shortfall)
+    critical_low_stock_items = []
+    for item in annotated_items:
+        if item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold:
+            shortfall = item.reorder_threshold - item.current_stock
+            item.shortfall = shortfall
+            critical_low_stock_items.append(item)
+    critical_low_stock_items.sort(key=lambda x: x.shortfall, reverse=True)
+    critical_low_stock_items = critical_low_stock_items[:5]
+
+    # 7. Recent Pending Distribution Requests
+    recent_pending_requests = (
+        DistributionRequest.objects.filter(
+            organization=user_org, status=DistributionRequest.Status.PENDING
+        )
+        .select_related("requested_by")
+        .prefetch_related("items__inventory_item")
+        .order_by("-requested_at")[:5]
+    )
+
+    # 8. Recent activity ledger
+    recent_activity = (
+        StockTransaction.objects.filter(organization=user_org)
+        .select_related("inventory_item", "recorded_by", "donation", "distribution_request")
+        .order_by("-created_at")[:6]
+    )
+
+    # 9. Category distribution breakdown
+    cat_totals = {}
+    for item in annotated_items:
+        cat_name = item.category.name if item.category else "General"
+        cat_totals[cat_name] = cat_totals.get(cat_name, Decimal("0.00")) + item.current_stock
+    category_summary = []
+    if total_stock_units > 0:
+        for cname, cstock in sorted(cat_totals.items(), key=lambda x: x[1], reverse=True)[:5]:
+            pct = round((float(cstock) / float(total_stock_units)) * 100, 1)
+            category_summary.append({"name": cname, "stock": cstock, "pct": pct})
+
     return render(
         request,
         "inventory/dashboard.html",
@@ -752,6 +794,10 @@ def dashboard(request):
             "distributions_this_month_count": distributions_this_month_count,
             "items_distributed_this_month": items_distributed_this_month,
             "today": today,
+            "critical_low_stock_items": critical_low_stock_items,
+            "recent_pending_requests": recent_pending_requests,
+            "recent_activity": recent_activity,
+            "category_summary": category_summary,
         },
     )
 

@@ -9,14 +9,14 @@
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
             <a href="{% url 'inventory:distribution_request_list' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Back to Distribution Requests</a>
             <span style="color: var(--text-subtle);">&bull;</span>
-            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Request Audit</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Request Audit Dossier</span>
         </div>
         <h1 class="page-title">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
             Distribution Request #{{ dist_req.pk }} &mdash; {{ dist_req.recipient_name }}
         </h1>
         <p class="page-subtitle">
-            Aid requisition for {{ dist_req.recipient_name }} &bull; {{ dist_req.organization.name }}
+            Aid requisition for <strong>{{ dist_req.recipient_name }}</strong> &bull; {{ dist_req.organization.name }}
         </p>
     </div>
 
@@ -50,7 +50,7 @@
 <div class="form-card" style="margin-bottom: 28px;">
     <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Recipient &amp; Requisition Overview
+        Recipient &amp; Requisition Details
     </h3>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 20px;">
@@ -109,65 +109,67 @@
 </div>
 
 <div class="table-card" style="margin-bottom: 32px;">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Category</th>
-                <th>Requested</th>
-                <th>Fulfilled</th>
-                <th>Remaining</th>
-                <th>Warehouse Stock</th>
-                <th>Line Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in items_with_stock %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td>
-                        <strong style="font-size: 0.98rem;">
-                            <a href="{% url 'inventory:inventory_detail' row.line.inventory_item.pk %}">
-                                {{ row.line.inventory_item.name }}
-                            </a>
-                        </strong>
-                    </td>
-                    <td>
-                        <span class="badge" style="background-color: var(--border-light); color: var(--text-muted);">
-                            {{ row.line.inventory_item.category.name }}
-                        </span>
-                    </td>
-                    <td style="font-weight: 600;">
-                        {{ row.line.quantity_requested }} {{ row.line.inventory_item.unit_of_measure }}
-                    </td>
-                    <td style="color: var(--text-muted);">
-                        {{ row.line.quantity_fulfilled|default:"0.00" }} {{ row.line.inventory_item.unit_of_measure }}
-                    </td>
-                    <td>
-                        <strong style="font-size: 1.05rem; color: {% if row.line.quantity_remaining > 0 %}var(--primary){% else %}var(--success){% endif %};">
-                            {{ row.line.quantity_remaining }} {{ row.line.inventory_item.unit_of_measure }}
-                        </strong>
-                    </td>
-                    <td>
-                        <strong>{{ row.current_stock }} {{ row.line.inventory_item.unit_of_measure }}</strong>
-                        {% if row.current_stock < row.line.quantity_remaining %}
-                            <div style="margin-top: 4px;">
-                                <span class="badge badge-danger">Stock Shortage</span>
-                            </div>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if row.line.is_fully_fulfilled %}
-                            <span class="badge badge-success">Complete</span>
-                        {% elif row.line.quantity_fulfilled > 0 %}
-                            <span class="badge badge-warning">Partially Dispatched</span>
-                        {% else %}
-                            <span class="badge" style="background-color: #f1f5f9; color: #64748b;">Pending</span>
-                        {% endif %}
-                    </td>
+                    <th>Item</th>
+                    <th>Category</th>
+                    <th>Requested</th>
+                    <th>Fulfilled</th>
+                    <th>Remaining</th>
+                    <th>Warehouse Stock</th>
+                    <th>Line Status</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for row in items_with_stock %}
+                    <tr>
+                        <td>
+                            <strong style="font-size: 0.95rem;">
+                                <a href="{% url 'inventory:inventory_detail' row.line.inventory_item.pk %}">
+                                    {{ row.line.inventory_item.name }}
+                                </a>
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="badge badge-neutral">
+                                {{ row.line.inventory_item.category.name }}
+                            </span>
+                        </td>
+                        <td style="font-weight: 600;">
+                            {{ row.line.quantity_requested }} {{ row.line.inventory_item.unit_of_measure }}
+                        </td>
+                        <td style="color: var(--text-muted);">
+                            {{ row.line.quantity_fulfilled|default:"0.00" }} {{ row.line.inventory_item.unit_of_measure }}
+                        </td>
+                        <td>
+                            <strong style="font-size: 1.05rem; color: {% if row.line.quantity_remaining > 0 %}var(--primary){% else %}var(--success){% endif %};">
+                                {{ row.line.quantity_remaining }} {{ row.line.inventory_item.unit_of_measure }}
+                            </strong>
+                        </td>
+                        <td>
+                            <strong>{{ row.current_stock }} {{ row.line.inventory_item.unit_of_measure }}</strong>
+                            {% if row.current_stock < row.line.quantity_remaining %}
+                                <div style="margin-top: 4px;">
+                                    <span class="badge badge-danger">Stock Shortage</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.line.is_fully_fulfilled %}
+                                <span class="badge badge-success">Complete</span>
+                            {% elif row.line.quantity_fulfilled > 0 %}
+                                <span class="badge badge-warning">Partially Dispatched</span>
+                            {% else %}
+                                <span class="badge badge-neutral">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- LINKED STOCK DISPATCHES -->
@@ -183,42 +185,44 @@
 
 {% if transactions %}
     <div class="table-card">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Transaction Time</th>
-                    <th>Item</th>
-                    <th>Type</th>
-                    <th>Quantity Deducted</th>
-                    <th>Dispatched By</th>
-                    <th>Note</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for txn in transactions %}
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td style="white-space: nowrap; font-size: 0.85rem; color: var(--text-muted);">
-                            {{ txn.created_at|date:"Y-m-d H:i" }}
-                        </td>
-                        <td>
-                            <strong>{{ txn.inventory_item.name }}</strong>
-                        </td>
-                        <td>
-                            <span class="badge" style="background-color: #e0f2fe; color: #0284c7;">
-                                {{ txn.get_transaction_type_display }}
-                            </span>
-                        </td>
-                        <td>
-                            <strong style="color: var(--danger); font-size: 1rem;">
-                                -{{ txn.quantity }} {{ txn.inventory_item.unit_of_measure }}
-                            </strong>
-                        </td>
-                        <td style="font-size: 0.88rem; color: var(--text-muted);">{{ txn.recorded_by.username }}</td>
-                        <td style="font-size: 0.85rem; color: var(--text-muted);">{{ txn.note|default:"—" }}</td>
+                        <th>Transaction Time</th>
+                        <th>Item</th>
+                        <th>Type</th>
+                        <th>Quantity Deducted</th>
+                        <th>Dispatched By</th>
+                        <th>Note</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                        <tr>
+                            <td style="white-space: nowrap; font-size: 0.85rem; color: var(--text-muted);">
+                                {{ txn.created_at|date:"Y-m-d H:i" }}
+                            </td>
+                            <td>
+                                <strong>{{ txn.inventory_item.name }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge badge-info">
+                                    {{ txn.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong style="color: var(--danger); font-size: 1rem;">
+                                    -{{ txn.quantity }} {{ txn.inventory_item.unit_of_measure }}
+                                </strong>
+                            </td>
+                            <td style="font-size: 0.88rem; color: var(--text-muted);">{{ txn.recorded_by.username }}</td>
+                            <td style="font-size: 0.85rem; color: var(--text-muted);">{{ txn.note|default:"—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 {% else %}
     <div class="form-card" style="text-align: center; padding: 36px; color: var(--text-muted);">

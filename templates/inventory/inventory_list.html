@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Inventory Stock Levels | ReliefStock{% endblock %}
+{% block title %}Inventory Management | ReliefStock{% endblock %}
 
 {% block content %}
 <!-- PAGE HEADER & ACTION TOOLBAR -->
 <section class="page-header">
     <div>
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Home</a>
+            <a href="{% url 'inventory:dashboard' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Dashboard</a>
             <span style="color: var(--text-subtle);">&bull;</span>
-            <span style="font-size: 0.85rem; font-weight: 600; color: var(--secondary);">Live Catalog</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Catalog &amp; Warehouse</span>
         </div>
         <h1 class="page-title">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--secondary);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
             {{ organization.name }} &mdash; Inventory Stock Levels
         </h1>
         <p class="page-subtitle">
-            Current stock balances, units of measure, category classification, and low-stock threshold monitoring.
+            Catalog balances, commodity categorization, real-time ledger quantities, and reorder threshold tracking.
         </p>
     </div>
 
@@ -39,72 +39,115 @@
     </div>
 </section>
 
+<!-- SEARCH & FILTER TOOLBAR -->
+<div class="table-toolbar">
+    <div class="toolbar-search-wrap">
+        <svg class="toolbar-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text"
+               class="toolbar-search-input"
+               placeholder="Search by item name or category..."
+               data-table-search="inventoryTable"
+               aria-label="Filter inventory items">
+    </div>
+
+    <div class="toolbar-filters">
+        <!-- Category Filter -->
+        <select class="filter-select" data-table-filter="inventoryTable" data-filter-col="1" aria-label="Filter by Category">
+            <option value="all">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat.name }}">{{ cat.name }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Stock Status Filter -->
+        <select class="filter-select" data-table-filter="inventoryTable" data-filter-col="5" aria-label="Filter by Status">
+            <option value="all">All Stock Statuses</option>
+            <option value="In Stock">In Stock</option>
+            <option value="Low Stock">Low Stock</option>
+            <option value="Out of Stock">Out of Stock</option>
+        </select>
+    </div>
+</div>
+
 <!-- INVENTORY DATA TABLE -->
 {% if items %}
     <div class="table-card">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Item Name</th>
-                    <th>Category</th>
-                    <th>Current Stock</th>
-                    <th>Unit</th>
-                    <th>Perishable</th>
-                    <th style="text-align: right;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in items %}
+        <div class="table-responsive">
+            <table class="data-table" id="inventoryTable">
+                <thead>
                     <tr>
-                        <td>
-                            <strong style="font-size: 1rem;">
-                                <a href="{% url 'inventory:inventory_detail' item.pk %}">{{ item.name }}</a>
-                            </strong>
-                            {% if item.description %}
-                                <div style="font-size: 0.8rem; color: var(--text-subtle);">{{ item.description|truncatewords:8 }}</div>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge" style="background-color: var(--border-light); color: var(--text-muted);">
-                                {{ item.category.name }}
-                            </span>
-                        </td>
-                        <td>
-                            <strong style="font-size: 1.15rem; color: {% if item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}var(--danger){% else %}var(--text-main){% endif %};">
-                                {{ item.current_stock }}
-                            </strong>
-                            {% if item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}
-                                <div style="margin-top: 4px;">
-                                    <span class="badge badge-danger">
-                                        Low &le; {{ item.reorder_threshold }}
-                                    </span>
-                                </div>
-                            {% endif %}
-                        </td>
-                        <td style="color: var(--text-muted); font-weight: 500;">
-                            {{ item.unit_of_measure }}
-                        </td>
-                        <td>
-                            {% if item.is_perishable %}
-                                <span class="badge badge-warning">Perishable</span>
-                            {% else %}
-                                <span class="badge" style="background-color: #f1f5f9; color: #64748b;">Non-Perishable</span>
-                            {% endif %}
-                        </td>
-                        <td style="text-align: right;">
-                            <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
-                                <a href="{% url 'inventory:inventory_detail' item.pk %}" class="btn btn-outline btn-xs">
-                                    History
-                                </a>
-                                <a href="{% url 'inventory:manual_adjustment' item.pk %}" class="btn btn-secondary btn-xs">
-                                    Adjust Stock
-                                </a>
-                            </div>
-                        </td>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Current Quantity</th>
+                        <th>Unit</th>
+                        <th>Reorder Threshold</th>
+                        <th>Stock Status</th>
+                        <th>Perishable</th>
+                        <th style="text-align: right;">Actions</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>
+                                <strong style="font-size: 0.95rem;">
+                                    <a href="{% url 'inventory:inventory_detail' item.pk %}">{{ item.name }}</a>
+                                </strong>
+                                {% if item.description %}
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ item.description|truncatewords:8 }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-neutral">
+                                    {{ item.category.name }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong style="font-size: 1.1rem; color: {% if item.current_stock == 0 %}var(--danger){% elif item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}var(--warning){% else %}var(--success){% endif %};">
+                                    {{ item.current_stock }}
+                                </strong>
+                            </td>
+                            <td style="color: var(--text-muted); font-weight: 500;">
+                                {{ item.unit_of_measure }}
+                            </td>
+                            <td style="color: var(--text-muted);">
+                                {% if item.reorder_threshold is not None %}
+                                    {{ item.reorder_threshold }} {{ item.unit_of_measure }}
+                                {% else %}
+                                    <span style="color: var(--text-subtle);">&mdash;</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.current_stock == 0 %}
+                                    <span class="badge badge-out-of-stock">Out of Stock</span>
+                                {% elif item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}
+                                    <span class="badge badge-low-stock">Low Stock</span>
+                                {% else %}
+                                    <span class="badge badge-in-stock">In Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.is_perishable %}
+                                    <span class="badge badge-expiring-soon">Perishable</span>
+                                {% else %}
+                                    <span class="badge badge-neutral">Non-Perishable</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
+                                    <a href="{% url 'inventory:inventory_detail' item.pk %}" class="btn btn-outline btn-xs" title="View detailed ledger">
+                                        Ledger
+                                    </a>
+                                    <a href="{% url 'inventory:manual_adjustment' item.pk %}" class="btn btn-secondary btn-xs" title="Execute stock adjustment">
+                                        Adjust
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 {% else %}
     <div class="form-card" style="text-align: center; padding: 48px 24px;">

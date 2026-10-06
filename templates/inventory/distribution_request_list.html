@@ -7,7 +7,7 @@
 <section class="page-header">
     <div>
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Home</a>
+            <a href="{% url 'inventory:dashboard' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Dashboard</a>
             <span style="color: var(--text-subtle);">&bull;</span>
             <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Aid Operations</span>
         </div>
@@ -29,8 +29,8 @@
 </section>
 
 <!-- STATUS FILTER TABS -->
-<div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-    <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-right: 4px;">Filter Status:</span>
+<div style="margin-bottom: 20px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-right: 4px;">Status Filter:</span>
     <a href="{% url 'inventory:distribution_request_list' %}" class="btn btn-xs {% if not current_status %}btn-primary{% else %}btn-outline{% endif %}">
         All Requests
     </a>
@@ -41,96 +41,116 @@
     {% endfor %}
 </div>
 
+<!-- SEARCH TOOLBAR -->
+<div class="table-toolbar">
+    <div class="toolbar-search-wrap">
+        <svg class="toolbar-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text"
+               class="toolbar-search-input"
+               placeholder="Search requests by recipient or staff..."
+               data-table-search="distribTable"
+               aria-label="Filter distribution requests">
+    </div>
+
+    <div class="toolbar-filters">
+        <span class="badge badge-neutral" style="font-size: 0.82rem; padding: 6px 12px;">
+            {{ requests|length }} Request(s) Listed
+        </span>
+    </div>
+</div>
+
 <!-- REQUESTS TABLE -->
 {% if requests %}
     <div class="table-card">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th style="width: 70px;">ID</th>
-                    <th>Recipient / Case</th>
-                    <th>Status</th>
-                    <th>Items Requested</th>
-                    <th>Requested By</th>
-                    <th>Date Requested</th>
-                    <th>Reviewer</th>
-                    <th style="text-align: right;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in requests %}
+        <div class="table-responsive">
+            <table class="data-table" id="distribTable">
+                <thead>
                     <tr>
-                        <td style="font-weight: 700; color: var(--text-subtle);">
-                            #{{ req.pk }}
-                        </td>
-                        <td>
-                            <strong style="font-size: 0.98rem;">
-                                <a href="{% url 'inventory:distribution_request_detail' req.pk %}">{{ req.recipient_name }}</a>
-                            </strong>
-                            {% if req.recipient_contact %}
-                                <div style="font-size: 0.8rem; color: var(--text-muted);">
-                                    {{ req.recipient_contact }}
-                                </div>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if req.status == 'PENDING' %}
-                                <span class="badge badge-warning">Pending Review</span>
-                            {% elif req.status == 'APPROVED' %}
-                                <span class="badge badge-primary">Approved</span>
-                            {% elif req.status == 'FULFILLED' %}
-                                <span class="badge badge-success">Fulfilled</span>
-                            {% elif req.status == 'REJECTED' %}
-                                <span class="badge badge-danger">Rejected</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <strong>{{ req.items.count }} item line(s)</strong>
-                            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
-                                {% for item in req.items.all|slice:":2" %}
-                                    {{ item.inventory_item.name }} ({{ item.quantity_requested }} {{ item.inventory_item.unit_of_measure }}){% if not forloop.last %}, {% endif %}
-                                {% endfor %}
-                                {% if req.items.count > 2 %}...{% endif %}
-                            </div>
-                        </td>
-                        <td style="font-size: 0.88rem;">
-                            {{ req.requested_by.username }}
-                            <div style="font-size: 0.75rem; color: var(--text-subtle);">
-                                {{ req.requested_by.get_role_display }}
-                            </div>
-                        </td>
-                        <td style="font-size: 0.85rem; color: var(--text-muted);">
-                            {{ req.requested_at|date:"Y-m-d H:i" }}
-                        </td>
-                        <td style="font-size: 0.85rem;">
-                            {% if req.reviewed_by %}
-                                <strong>{{ req.reviewed_by.username }}</strong>
-                                <div style="font-size: 0.75rem; color: var(--text-subtle);">{{ req.reviewed_at|date:"Y-m-d H:i" }}</div>
-                            {% else %}
-                                <span style="color: var(--text-subtle);">&mdash;</span>
-                            {% endif %}
-                        </td>
-                        <td style="text-align: right;">
-                            <div style="display: inline-flex; gap: 6px; justify-content: flex-end;">
-                                <a href="{% url 'inventory:distribution_request_detail' req.pk %}" class="btn btn-outline btn-xs">
-                                    View
-                                </a>
-                                {% if req.status == 'PENDING' and user.role == 'ADMIN' or req.status == 'PENDING' and user.is_superuser %}
-                                    <a href="{% url 'inventory:distribution_request_review' req.pk %}" class="btn btn-primary btn-xs">
-                                        Review
-                                    </a>
-                                {% endif %}
-                                {% if req.status == 'APPROVED' and user.role == 'STAFF' or req.status == 'APPROVED' and user.role == 'ADMIN' or req.status == 'APPROVED' and user.is_superuser %}
-                                    <a href="{% url 'inventory:distribution_request_fulfill' req.pk %}" class="btn btn-secondary btn-xs" style="background-color: #f0fdf4; color: #16a34a; border-color: #bbf7d0;">
-                                        Fulfill
-                                    </a>
-                                {% endif %}
-                            </div>
-                        </td>
+                        <th style="width: 70px;">ID</th>
+                        <th>Recipient / Case</th>
+                        <th>Status</th>
+                        <th>Items Requested</th>
+                        <th>Requested By</th>
+                        <th>Date Requested</th>
+                        <th>Reviewer</th>
+                        <th style="text-align: right;">Actions</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                        <tr>
+                            <td style="font-weight: 700; color: var(--text-subtle);">
+                                #{{ req.pk }}
+                            </td>
+                            <td>
+                                <strong style="font-size: 0.95rem;">
+                                    <a href="{% url 'inventory:distribution_request_detail' req.pk %}">{{ req.recipient_name }}</a>
+                                </strong>
+                                {% if req.recipient_contact %}
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                        {{ req.recipient_contact }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'PENDING' %}
+                                    <span class="badge badge-warning">Pending Review</span>
+                                {% elif req.status == 'APPROVED' %}
+                                    <span class="badge badge-primary">Approved</span>
+                                {% elif req.status == 'FULFILLED' %}
+                                    <span class="badge badge-success">Fulfilled</span>
+                                {% elif req.status == 'REJECTED' %}
+                                    <span class="badge badge-danger">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ req.items.count }} item line(s)</strong>
+                                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                                    {% for item in req.items.all|slice:":2" %}
+                                        {{ item.inventory_item.name }} ({{ item.quantity_requested }} {{ item.inventory_item.unit_of_measure }}){% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                    {% if req.items.count > 2 %}...{% endif %}
+                                </div>
+                            </td>
+                            <td style="font-size: 0.88rem;">
+                                {{ req.requested_by.username }}
+                                <div style="font-size: 0.75rem; color: var(--text-subtle);">
+                                    {{ req.requested_by.get_role_display }}
+                                </div>
+                            </td>
+                            <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">
+                                {{ req.requested_at|date:"Y-m-d H:i" }}
+                            </td>
+                            <td style="font-size: 0.85rem;">
+                                {% if req.reviewed_by %}
+                                    <strong>{{ req.reviewed_by.username }}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-subtle);">{{ req.reviewed_at|date:"Y-m-d H:i" }}</div>
+                                {% else %}
+                                    <span style="color: var(--text-subtle);">&mdash;</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 6px; justify-content: flex-end;">
+                                    <a href="{% url 'inventory:distribution_request_detail' req.pk %}" class="btn btn-outline btn-xs" title="View details and lines">
+                                        View
+                                    </a>
+                                    {% if req.status == 'PENDING' and user.role == 'ADMIN' or req.status == 'PENDING' and user.is_superuser %}
+                                        <a href="{% url 'inventory:distribution_request_review' req.pk %}" class="btn btn-primary btn-xs" title="Approve or reject">
+                                            Review
+                                        </a>
+                                    {% endif %}
+                                    {% if req.status == 'APPROVED' and user.role == 'STAFF' or req.status == 'APPROVED' and user.role == 'ADMIN' or req.status == 'APPROVED' and user.is_superuser %}
+                                        <a href="{% url 'inventory:distribution_request_fulfill' req.pk %}" class="btn btn-secondary btn-xs" style="background-color: var(--success-light); color: var(--success-text); border-color: var(--success-border);" title="Fulfill / Dispatch">
+                                            Fulfill
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 {% else %}
     <div class="form-card" style="text-align: center; padding: 48px 24px;">
