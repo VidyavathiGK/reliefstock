@@ -1,433 +1,232 @@
 {% extends "base.html" %}
 
-{% block title %}Operations Dashboard | ReliefStock{% endblock %}
+{% block title %}Executive Dashboard | ReliefStock{% endblock %}
 
 {% block content %}
 <!-- PAGE HEADER BANNER -->
 <section class="page-header">
     <div>
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Home</a>
+            <a href="{% url 'home' %}" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">&larr; Main Home</a>
             <span style="color: var(--text-subtle);">&bull;</span>
-            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Live Operations Hub</span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Executive Operations Command</span>
         </div>
         <h1 class="page-title">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
             {{ organization.name }} &mdash; Operations Dashboard
         </h1>
         <p class="page-subtitle">
-            Real-time aid logistics intelligence, stock balances, low-stock warnings, and distribution request queue.
+            Live operational intelligence, catalog health metrics, inventory alerts, and monthly logistics throughput.
         </p>
     </div>
 
     <div class="header-meta">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span><strong>Live Operations:</strong> {{ today|date:"F d, Y" }}</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span><strong>Live As Of:</strong> {{ today|date:"F d, Y" }}</span>
     </div>
 </section>
 
-<!-- 1. KPI CARDS (5 Core Indicators) -->
-<section aria-label="Key Performance Indicators">
-    <div class="kpi-grid">
-        <!-- 1. Total Inventory Items -->
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <span class="kpi-label">Total Inventory Items</span>
-                <div class="kpi-icon-wrap icon-teal">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                </div>
-            </div>
-            <div class="kpi-value">{{ total_distinct_items }}</div>
-            <div class="kpi-footer">
-                <span class="kpi-indicator indicator-neutral">Distinct catalog SKUs</span>
-                <a href="{% url 'inventory:inventory_list' %}" style="font-weight: 600; font-size: 0.78rem;">Catalog &rarr;</a>
-            </div>
-        </div>
-
-        <!-- 2. Available Stock Units -->
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <span class="kpi-label">Available Stock</span>
-                <div class="kpi-icon-wrap icon-green">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
-                </div>
-            </div>
-            <div class="kpi-value" style="color: var(--success);">{{ total_stock_units }}</div>
-            <div class="kpi-footer">
-                <span class="kpi-indicator indicator-positive">&check; Units on hand</span>
-                <a href="{% url 'inventory:inventory_list' %}" style="font-weight: 600; font-size: 0.78rem; color: var(--success);">Balances &rarr;</a>
-            </div>
-        </div>
-
-        <!-- 3. Pending Distribution Requests -->
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <span class="kpi-label">Pending Requests</span>
-                <div class="kpi-icon-wrap icon-blue">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="12" cy="14" r="2"/></svg>
-                </div>
-            </div>
-            <div class="kpi-value" style="color: var(--secondary);">{{ pending_requests_count }}</div>
-            <div class="kpi-footer">
-                <span class="kpi-indicator {% if pending_requests_count > 0 %}indicator-warning{% else %}indicator-positive{% endif %}">
-                    {% if pending_requests_count > 0 %}Awaiting decision{% else %}Queue clear{% endif %}
-                </span>
-                <a href="{% url 'inventory:distribution_request_list' %}?status=PENDING" style="font-weight: 600; font-size: 0.78rem; color: var(--secondary);">Review &rarr;</a>
-            </div>
-        </div>
-
-        <!-- 4. Donations This Month -->
-        <div class="kpi-card">
-            <div class="kpi-header">
-                <span class="kpi-label">Donations This Month</span>
-                <div class="kpi-icon-wrap icon-teal">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                </div>
-            </div>
-            <div class="kpi-value">{{ donations_this_month_count }}</div>
-            <div class="kpi-footer">
-                <span class="kpi-indicator indicator-positive">+{{ items_donated_this_month }} units received</span>
-                <a href="{% url 'inventory:report_donations' %}" style="font-weight: 600; font-size: 0.78rem;">History &rarr;</a>
-            </div>
-        </div>
-
-        <!-- 5. Low Stock Items Alert -->
-        <div class="kpi-card" style="{% if low_stock_count > 0 %}border-color: var(--danger-border);{% endif %}">
-            <div class="kpi-header">
-                <span class="kpi-label">Low Stock Items</span>
-                <div class="kpi-icon-wrap {% if low_stock_count > 0 %}icon-red{% else %}icon-green{% endif %}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                </div>
-            </div>
-            <div class="kpi-value" style="color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--success){% endif %};">
-                {{ low_stock_count }}
-            </div>
-            <div class="kpi-footer">
-                <span class="kpi-indicator {% if low_stock_count > 0 %}indicator-danger{% else %}indicator-positive{% endif %}">
-                    {% if low_stock_count > 0 %}Urgent reorder needed{% else %}Stock healthy{% endif %}
-                </span>
-                <a href="{% url 'inventory:low_stock_list' %}" style="font-weight: 600; font-size: 0.78rem; color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--text-muted){% endif %};">Alerts &rarr;</a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 2. CHARTS / VISUAL SUMMARIES -->
-<div class="summaries-grid">
-    <!-- Visual 1: Monthly Throughput Activity (Donations vs Dispatches) -->
-    <div class="summary-card">
-        <div class="summary-card-header">
-            <div class="summary-card-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                Monthly Activity ({{ today|date:"F Y" }})
-            </div>
-            <span class="badge badge-neutral">Throughput</span>
-        </div>
-
-        <div style="margin-bottom: 20px;">
-            <div class="category-bar-meta" style="margin-bottom: 4px;">
-                <span class="category-bar-name" style="display: flex; align-items: center; gap: 6px;">
-                    <span style="width: 10px; height: 10px; border-radius: 2px; background-color: var(--success); display: inline-block;"></span>
-                    Inbound Donations Intake
-                </span>
-                <span class="category-bar-stat" style="color: var(--success);">+{{ items_donated_this_month }} units ({{ donations_this_month_count }} drop-offs)</span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-bar-fill fill-green" style="width: {% if items_donated_this_month > 0 or items_distributed_this_month > 0 %}{% widthratio items_donated_this_month items_donated_this_month|add:items_distributed_this_month 100 %}{% else %}0{% endif %}%;"></div>
-            </div>
-        </div>
-
-        <div style="margin-bottom: 16px;">
-            <div class="category-bar-meta" style="margin-bottom: 4px;">
-                <span class="category-bar-name" style="display: flex; align-items: center; gap: 6px;">
-                    <span style="width: 10px; height: 10px; border-radius: 2px; background-color: var(--secondary); display: inline-block;"></span>
-                    Outbound Relief Dispatches
-                </span>
-                <span class="category-bar-stat" style="color: var(--secondary);">-{{ items_distributed_this_month }} units ({{ distributions_this_month_count }} orders)</span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-bar-fill fill-blue" style="width: {% if items_donated_this_month > 0 or items_distributed_this_month > 0 %}{% widthratio items_distributed_this_month items_donated_this_month|add:items_distributed_this_month 100 %}{% else %}0{% endif %}%;"></div>
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border-light); font-size: 0.8125rem;">
-            <a href="{% url 'inventory:record_donation' %}" class="btn btn-outline btn-xs">+ Record Inbound</a>
-            <a href="{% url 'inventory:distribution_request_list' %}" class="btn btn-primary btn-xs">Dispatch Supplies</a>
-        </div>
-    </div>
-
-    <!-- Visual 2: Inventory Distribution by Category -->
-    <div class="summary-card">
-        <div class="summary-card-header">
-            <div class="summary-card-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary);"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10H12Z"/></svg>
-                Inventory by Category
-            </div>
-            <span class="badge badge-neutral">{{ category_summary|length }} Categories</span>
-        </div>
-
-        {% if category_summary %}
-            {% for cat in category_summary %}
-                <div class="category-bar-item">
-                    <div class="category-bar-meta">
-                        <span class="category-bar-name">{{ cat.name }}</span>
-                        <span class="category-bar-stat">{{ cat.total_units }} units ({{ cat.percentage }}%)</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-bar-fill {% cycle 'fill-primary' 'fill-blue' 'fill-green' 'fill-amber' %}" style="width: {{ cat.percentage }}%;"></div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; padding: 20px 0; text-align: center;">
-                No category breakdown data available.
-            </p>
-        {% endif %}
-    </div>
-
-    <!-- Visual 3: Distribution & Shelf Health Activity -->
-    <div class="summary-card">
-        <div class="summary-card-header">
-            <div class="summary-card-title">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--warning);"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                Shelf Health &amp; Expiry
-            </div>
-            <span class="badge badge-neutral">Auditing</span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 14px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background-color: var(--bg-page); border-radius: var(--radius-md);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--warning);"></div>
-                    <span style="font-weight: 600; font-size: 0.86rem;">Expiring Soon (Within 7 Days)</span>
-                </div>
-                <strong style="color: var(--warning);">{{ expiring_soon_count }} SKU(s)</strong>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background-color: var(--bg-page); border-radius: var(--radius-md);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--danger);"></div>
-                    <span style="font-weight: 600; font-size: 0.86rem;">Expired Goods on Shelves</span>
-                </div>
-                <strong style="color: var(--danger);">{{ expired_count }} SKU(s)</strong>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background-color: var(--bg-page); border-radius: var(--radius-md);">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--primary);"></div>
-                    <span style="font-weight: 600; font-size: 0.86rem;">Pending Approval Queue</span>
-                </div>
-                <strong style="color: var(--primary);">{{ pending_requests_count }} request(s)</strong>
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 14px; margin-top: 8px; border-top: 1px solid var(--border-light); font-size: 0.8125rem;">
-            <a href="{% url 'inventory:expiring_stock_list' %}" style="font-weight: 600; color: var(--warning);">Inspect Perishables &rarr;</a>
-            <a href="{% url 'inventory:report_inventory' %}" style="font-weight: 600;">Inventory Audit &rarr;</a>
-        </div>
-    </div>
-</div>
-
-<!-- 3. OPERATIONAL WORKFLOW TABLES: LOW STOCK ALERTS & PENDING DISTRIBUTION REQUESTS -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 24px; margin-bottom: 28px;">
-    <!-- Section 4: Critical Low Stock Alerts -->
-    <div>
-        <div class="section-header" style="margin-top: 0;">
-            <div>
-                <h3 class="section-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--danger);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    Critical Low Stock Alerts
-                </h3>
-                <p class="section-subtitle">Commodities below minimum configured reorder thresholds.</p>
-            </div>
-            <a href="{% url 'inventory:low_stock_list' %}" class="btn btn-outline btn-xs">View All ({{ low_stock_count }})</a>
-        </div>
-
-        <div class="table-card">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Item Name</th>
-                        <th>Current Stock</th>
-                        <th>Threshold</th>
-                        <th>Status</th>
-                        <th style="text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in critical_low_stock_items %}
-                        <tr class="{% if item.current_stock == 0 %}tr-danger{% else %}tr-warning{% endif %}">
-                            <td>
-                                <strong style="font-size: 0.92rem;">
-                                    <a href="{% url 'inventory:inventory_detail' item.pk %}">{{ item.name }}</a>
-                                </strong>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.category.name }}</div>
-                            </td>
-                            <td>
-                                <strong style="font-size: 0.98rem; color: {% if item.current_stock == 0 %}var(--danger){% else %}var(--warning){% endif %};">
-                                    {{ item.current_stock }} {{ item.unit_of_measure }}
-                                </strong>
-                            </td>
-                            <td style="color: var(--text-muted); font-size: 0.85rem;">
-                                {{ item.reorder_threshold }} {{ item.unit_of_measure }}
-                            </td>
-                            <td>
-                                {% if item.current_stock == 0 %}
-                                    <span class="badge badge-out-of-stock">Out of Stock</span>
-                                {% else %}
-                                    <span class="badge badge-low-stock">Deficit -{{ item.shortfall }}</span>
-                                {% endif %}
-                            </td>
-                            <td style="text-align: right;">
-                                <a href="{% url 'inventory:inventory_detail' item.pk %}" class="btn btn-secondary btn-xs" title="View commodity ledger">
-                                    View
-                                </a>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 28px; color: var(--text-muted);">
-                                &check; All inventory items currently meet or exceed reorder thresholds.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Section 5: Pending Distribution Requests -->
-    <div>
-        <div class="section-header" style="margin-top: 0;">
-            <div>
-                <h3 class="section-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--secondary);"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                    Pending Distribution Requests
-                </h3>
-                <p class="section-subtitle">Awaiting administrative approval and dispatch authorization.</p>
-            </div>
-            <a href="{% url 'inventory:distribution_request_list' %}?status=PENDING" class="btn btn-outline btn-xs">All Requests</a>
-        </div>
-
-        <div class="table-card">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Recipient</th>
-                        <th>Items</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th style="text-align: right;">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for req in recent_pending_requests %}
-                        <tr>
-                            <td>
-                                <strong style="font-size: 0.92rem;">
-                                    <a href="{% url 'inventory:distribution_request_detail' req.pk %}">{{ req.recipient_name }}</a>
-                                </strong>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">By {{ req.requested_by.username }}</div>
-                            </td>
-                            <td>
-                                <span class="badge badge-neutral">{{ req.items.count }} item line(s)</span>
-                            </td>
-                            <td style="font-size: 0.8125rem; color: var(--text-muted); white-space: nowrap;">
-                                {{ req.created_at|date:"M d, H:i" }}
-                            </td>
-                            <td>
-                                <span class="badge badge-warning">Pending Review</span>
-                            </td>
-                            <td style="text-align: right;">
-                                <a href="{% url 'inventory:distribution_request_detail' req.pk %}" class="btn btn-primary btn-xs">
-                                    Review
-                                </a>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 28px; color: var(--text-muted);">
-                                &check; No pending distribution requests in the queue.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- 4. RECENT ACTIVITY LEDGER AUDIT -->
+<!-- SECTION 1: INVENTORY & STOCK OVERVIEW -->
 <div class="section-header">
     <div>
         <h3 class="section-title">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-            Recent Activity &amp; Audit Log
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            1. Catalog &amp; Physical Stock Overview
         </h3>
-        <p class="section-subtitle">Real-time ledger events including donations received, distributions fulfilled, and manual adjustments.</p>
+        <p class="section-subtitle">Aggregated metrics across registered categories and warehouse shelves.</p>
     </div>
-    <a href="{% url 'inventory:report_inventory' %}" class="btn btn-outline btn-xs">Full Audit Trail</a>
 </div>
 
-<div class="table-card" style="margin-bottom: 32px;">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Timestamp</th>
-                <th>Activity Type</th>
-                <th>Commodity Item</th>
-                <th>Quantity</th>
-                <th>Recorded By</th>
-                <th>Notes / Reference</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for act in recent_activity %}
-                <tr>
-                    <td style="white-space: nowrap; font-size: 0.8125rem; color: var(--text-muted);">
-                        {{ act.created_at|date:"Y-m-d H:i" }}
-                    </td>
-                    <td>
-                        {% if act.transaction_type == 'DONATION_INTAKE' %}
-                            <span class="badge badge-success">Donation Intake</span>
-                        {% elif act.transaction_type == 'DISTRIBUTION_OUT' %}
-                            <span class="badge badge-info">Distribution Dispatch</span>
-                        {% elif act.transaction_type == 'MANUAL_ADJUSTMENT' %}
-                            <span class="badge badge-warning">Stock Adjustment</span>
-                        {% else %}
-                            <span class="badge badge-neutral">{{ act.get_transaction_type_display }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <strong><a href="{% url 'inventory:inventory_detail' act.inventory_item.pk %}">{{ act.inventory_item.name }}</a></strong>
-                    </td>
-                    <td>
-                        <strong style="color: {% if act.quantity > 0 %}var(--success){% else %}var(--danger){% endif %};">
-                            {% if act.quantity > 0 %}+{% endif %}{{ act.quantity }} {{ act.inventory_item.unit_of_measure }}
-                        </strong>
-                    </td>
-                    <td style="font-size: 0.85rem; color: var(--text-muted);">{{ act.recorded_by.username }}</td>
-                    <td style="font-size: 0.8125rem; color: var(--text-muted);">{{ act.note|default:"—" }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                        No ledger transactions recorded yet.
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="metrics-grid">
+    <!-- Distinct Catalog Items -->
+    <div class="metric-card metric-card-primary">
+        <div class="metric-header">
+            <span class="metric-label">Distinct Catalog SKUs</span>
+            <div class="metric-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+            </div>
+        </div>
+        <div class="metric-value">{{ total_distinct_items }}</div>
+        <div class="metric-subtext">Registered catalog commodities</div>
+        <a href="{% url 'inventory:inventory_list' %}" class="metric-link" style="color: var(--primary);">
+            View Catalog &rarr;
+        </a>
+    </div>
+
+    <!-- Total Stock on Hand -->
+    <div class="metric-card metric-card-success">
+        <div class="metric-header">
+            <span class="metric-label">Total Stock Units</span>
+            <div class="metric-icon" style="background-color: var(--success-light); color: var(--success);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--success);">{{ total_stock_units }}</div>
+        <div class="metric-subtext">Aggregated units across all categories</div>
+        <a href="{% url 'inventory:inventory_list' %}" class="metric-link" style="color: var(--success);">
+            Inspect Balances &rarr;
+        </a>
+    </div>
+
+    <!-- Low Stock Items Alert -->
+    <div class="metric-card {% if low_stock_count > 0 %}metric-card-danger{% else %}metric-card-success{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Low Stock Warnings</span>
+            <div class="metric-icon" style="background-color: {% if low_stock_count > 0 %}var(--danger-light){% else %}var(--border-light){% endif %}; color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--text-subtle){% endif %};">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--text-main){% endif %};">
+            {{ low_stock_count }}
+        </div>
+        <div class="metric-subtext">
+            {% if low_stock_count > 0 %}
+                <span class="badge badge-danger">Needs Reorder</span>
+            {% else %}
+                <span class="badge badge-success">Sufficient Stock</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:low_stock_list' %}" class="metric-link" style="color: {% if low_stock_count > 0 %}var(--danger){% else %}var(--text-muted){% endif %};">
+            View Low Stock Queue &rarr;
+        </a>
+    </div>
 </div>
 
-<!-- 5. MANAGEMENT REPORTS QUICK ACCESS -->
+<!-- SECTION 2: URGENT ATTENTION & WORKFLOW QUEUES -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            2. Urgent Attention &amp; Workflow Queues
+        </h3>
+        <p class="section-subtitle">Items requiring administrative action, immediate dispatch, or safe disposal.</p>
+    </div>
+</div>
+
+<div class="metrics-grid">
+    <!-- Pending Review Requests -->
+    <div class="metric-card {% if pending_requests_count > 0 %}metric-card-primary{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Pending Review Requests</span>
+            <div class="metric-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><circle cx="12" cy="14" r="2"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--primary);">{{ pending_requests_count }}</div>
+        <div class="metric-subtext">
+            {% if pending_requests_count > 0 %}
+                <span class="badge badge-primary">Awaiting Admin Decision</span>
+            {% else %}
+                <span class="badge badge-success">Queue Clear</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:distribution_request_list' %}?status=PENDING" class="metric-link" style="color: var(--primary);">
+            Review Requests Queue &rarr;
+        </a>
+    </div>
+
+    <!-- Expiring Soon (Next 7 Days) -->
+    <div class="metric-card {% if expiring_soon_count > 0 %}metric-card-warning{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Expiring Soon (7 Days)</span>
+            <div class="metric-icon" style="background-color: var(--warning-light); color: var(--warning);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--warning);">{{ expiring_soon_count }}</div>
+        <div class="metric-subtext">
+            {% if expiring_soon_count > 0 %}
+                <span class="badge badge-warning">Prioritize Dispatch</span>
+            {% else %}
+                <span class="badge badge-success">Fresh Inventory</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:expiring_stock_list' %}?filter=expiring_soon" class="metric-link" style="color: var(--warning);">
+            Inspect Batches &rarr;
+        </a>
+    </div>
+
+    <!-- Expired Goods -->
+    <div class="metric-card {% if expired_count > 0 %}metric-card-danger{% endif %}">
+        <div class="metric-header">
+            <span class="metric-label">Expired Goods</span>
+            <div class="metric-icon" style="background-color: var(--danger-light); color: var(--danger);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--danger);">{{ expired_count }}</div>
+        <div class="metric-subtext">
+            {% if expired_count > 0 %}
+                <span class="badge badge-danger">Do Not Distribute</span>
+            {% else %}
+                <span class="badge badge-success">0 Expired Stock</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'inventory:expiring_stock_list' %}?filter=expired" class="metric-link" style="color: var(--danger);">
+            Review &amp; Discard &rarr;
+        </a>
+    </div>
+</div>
+
+<!-- SECTION 3: MONTHLY ACTIVITY METRICS -->
+<div class="section-header">
+    <div>
+        <h3 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            3. Monthly Operational Throughput ({{ today|date:"F Y" }})
+        </h3>
+        <p class="section-subtitle">Real-time ledger counts and movement for the current calendar month.</p>
+    </div>
+</div>
+
+<div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+    <!-- Inbound Donations -->
+    <div class="metric-card metric-card-success">
+        <div class="metric-header">
+            <span class="metric-label">Inbound Donations Intake</span>
+            <div class="metric-icon" style="background-color: var(--success-light); color: var(--success);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--success);">
+            {{ donations_this_month_count }} <span style="font-size: 1rem; font-weight: 600; color: var(--text-muted);">event(s)</span>
+        </div>
+        <div class="metric-subtext" style="font-size: 0.95rem; margin-top: 4px;">
+            Total Units Inbound: <strong style="color: var(--success); font-size: 1.1rem; margin-left: 4px;">+{{ items_donated_this_month }}</strong>
+        </div>
+        <a href="{% url 'inventory:report_donations' %}" class="metric-link" style="color: var(--success);">
+            Open Donations Report &rarr;
+        </a>
+    </div>
+
+    <!-- Outbound Distributions -->
+    <div class="metric-card metric-card-primary">
+        <div class="metric-header">
+            <span class="metric-label">Outbound Relief Dispatches</span>
+            <div class="metric-icon" style="background-color: var(--primary-light); color: var(--primary);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+            </div>
+        </div>
+        <div class="metric-value" style="color: var(--primary);">
+            {{ distributions_this_month_count }} <span style="font-size: 1rem; font-weight: 600; color: var(--text-muted);">dispatch(es)</span>
+        </div>
+        <div class="metric-subtext" style="font-size: 0.95rem; margin-top: 4px;">
+            Total Units Outbound: <strong style="color: var(--primary); font-size: 1.1rem; margin-left: 4px;">-{{ items_distributed_this_month }}</strong>
+        </div>
+        <a href="{% url 'inventory:report_distributions' %}" class="metric-link" style="color: var(--primary);">
+            Open Distributions Report &rarr;
+        </a>
+    </div>
+</div>
+
+<!-- SECTION 4: EXPORTABLE REPORTS QUICK ACCESS -->
 <div class="section-header">
     <div>
         <h3 class="section-title">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Management Reports &amp; Exports
+            4. Management Reports &amp; Data Exports
         </h3>
-        <p class="section-subtitle">Real-time audit log generation with spreadsheet CSV and formal PDF export capabilities.</p>
+        <p class="section-subtitle">Generate real-time audit reports and export to spreadsheets or print-ready PDF files.</p>
     </div>
 </div>
 
@@ -436,19 +235,27 @@
     <div class="report-card">
         <div>
             <div class="report-card-header">
-                <div class="card-icon icon-inventory">
+                <div class="card-icon icon-inventory" style="width: 40px; height: 40px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                 </div>
                 <div class="report-card-title">Inventory Stock Report</div>
             </div>
             <p class="report-card-desc">
-                Stock levels, categories, unit counts, reorder thresholds, and current deficit status for all inventory items.
+                Comprehensive stock levels, categories, unit counts, thresholds, and current deficit status for all inventory items.
             </p>
         </div>
         <div class="report-actions">
-            <a href="{% url 'inventory:report_inventory' %}" class="btn btn-primary btn-sm">View Report</a>
-            <a href="{% url 'inventory:report_inventory' %}?format=csv" class="btn btn-outline btn-sm">CSV</a>
-            <a href="{% url 'inventory:report_inventory' %}?format=pdf" class="btn btn-outline btn-sm">PDF</a>
+            <a href="{% url 'inventory:report_inventory' %}" class="btn btn-primary btn-sm">
+                View Report
+            </a>
+            <a href="{% url 'inventory:report_inventory' %}?format=csv" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+            </a>
+            <a href="{% url 'inventory:report_inventory' %}?format=pdf" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                PDF
+            </a>
         </div>
     </div>
 
@@ -456,19 +263,27 @@
     <div class="report-card">
         <div>
             <div class="report-card-header">
-                <div class="card-icon icon-donations">
+                <div class="card-icon icon-donations" style="width: 40px; height: 40px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                 </div>
                 <div class="report-card-title">Donation History Report</div>
             </div>
             <p class="report-card-desc">
-                Inbound donation drop-offs with donor details, item quantities, and date-range filtering for audit compliance.
+                Inbound donation drop-offs with donor details, item quantities, and date-range filtering for financial and NGO audits.
             </p>
         </div>
         <div class="report-actions">
-            <a href="{% url 'inventory:report_donations' %}" class="btn btn-primary btn-sm">View Report</a>
-            <a href="{% url 'inventory:report_donations' %}?format=csv" class="btn btn-outline btn-sm">CSV</a>
-            <a href="{% url 'inventory:report_donations' %}?format=pdf" class="btn btn-outline btn-sm">PDF</a>
+            <a href="{% url 'inventory:report_donations' %}" class="btn btn-primary btn-sm">
+                View Report
+            </a>
+            <a href="{% url 'inventory:report_donations' %}?format=csv" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+            </a>
+            <a href="{% url 'inventory:report_donations' %}?format=pdf" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                PDF
+            </a>
         </div>
     </div>
 
@@ -476,19 +291,27 @@
     <div class="report-card">
         <div>
             <div class="report-card-header">
-                <div class="card-icon icon-distrib">
+                <div class="card-icon icon-distrib" style="width: 40px; height: 40px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                 </div>
                 <div class="report-card-title">Distribution History Report</div>
             </div>
             <p class="report-card-desc">
-                Audit log of fulfilled relief supplies, recipient organization/shelter names, approval timestamps, and line items.
+                Audit log of fulfilled relief supplies, recipient organization/shelter names, approval timestamps, and line-item totals.
             </p>
         </div>
         <div class="report-actions">
-            <a href="{% url 'inventory:report_distributions' %}" class="btn btn-primary btn-sm">View Report</a>
-            <a href="{% url 'inventory:report_distributions' %}?format=csv" class="btn btn-outline btn-sm">CSV</a>
-            <a href="{% url 'inventory:report_distributions' %}?format=pdf" class="btn btn-outline btn-sm">PDF</a>
+            <a href="{% url 'inventory:report_distributions' %}" class="btn btn-primary btn-sm">
+                View Report
+            </a>
+            <a href="{% url 'inventory:report_distributions' %}?format=csv" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                CSV
+            </a>
+            <a href="{% url 'inventory:report_distributions' %}?format=pdf" class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                PDF
+            </a>
         </div>
     </div>
 </div>

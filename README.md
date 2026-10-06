@@ -9,18 +9,6 @@ ReliefStock is a full-featured, multi-tenant inventory, donation intake, and rel
 
 ---
 
-## 0. Project Description & Mission
-
-**ReliefStock** addresses the critical operational challenges faced by frontline NGOs, food pantries, emergency shelters, and community aid organizations:
-
-* **Real-time Stock Visibility**: Eliminates stockouts and food waste through an immutable double-entry ledger calculation (`StockTransaction`), replacing manual spreadsheets and error-prone batch updates.
-* **Governance & Audit Compliance**: Enforces multi-tier governance for aid dispatches (`PENDING` ➔ `APPROVED` ➔ `FULFILLED`). Over-fulfillments beyond physical warehouse stock are prevented with atomic database transactions.
-* **Perishable & Expiry Management**: Automated timeline tracking highlights perishables expiring within 7 days to prioritize immediate dispatch, while flagging already-expired goods for safe disposal.
-* **Donor Engagement & Attribution**: Features a dedicated self-service Donor Portal with verified tax-receipt records, encouraging recurring contributions and transparent tracking.
-* **Modern Enterprise NGO UI**: Designed with a clean, distraction-free humanitarian design system featuring a fixed sidebar, live ops health monitoring, instant client-side catalog search, and visual throughput summaries.
-
----
-
 ## 1. System Architecture & Feature Matrix
 
 ```text
@@ -46,7 +34,7 @@ ReliefStock is a full-featured, multi-tenant inventory, donation intake, and rel
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Complete 6-Phase Evolution
+### Complete 5-Phase Evolution
 1. **Phase 1: Multi-Tenant Foundation & Auth**
    Custom `User` model with 4 distinct roles (`ADMIN`, `STAFF`, `VOLUNTEER`, `DONOR`), `Organization` tenant isolation, catalog items, and Django administration.
 2. **Phase 2: Immutable Stock Ledger & Inbound Intakes**
@@ -57,8 +45,6 @@ ReliefStock is a full-featured, multi-tenant inventory, donation intake, and rel
    Staff/Admin operational cockpit, tabular reporting engine with dynamic date/search filters, 1-click **CSV** and **PDF** exports (via ReportLab flowables), dedicated read-only Donor Portal, and unified `@role_required` decorators.
 5. **Phase 5: REST API, Automated Testing Suite & Production Deployment**
    Full DRF API (`/api/v1/`), Token Authentication, atomic nested serializers, 42-test `pytest` automated test suite with fixtures, Gunicorn WSGI setup, WhiteNoise asset compression, and 1-click Render blueprint (`render.yaml`).
-6. **Phase 6: Enterprise NGO Frontend & UI Redesign**
-   Fixed sidebar navigation layout, top header with live ops status indicator, mobile drawer, 5 core KPI cards, HTML/CSS visual throughput summaries, instant client-side table search & filtering, and semantic status badges with zero external framework dependencies.
 
 ---
 

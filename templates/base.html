@@ -9,225 +9,154 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="app-shell {% if not user.is_authenticated %}unauthenticated{% endif %}">
-        {% if user.is_authenticated %}
-            <!-- Mobile Sidebar Backdrop Overlay -->
-            <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
-
-            <!-- FIXED ENTERPRISE NGO SIDEBAR -->
-            <aside class="app-sidebar" id="appSidebar" aria-label="Main Navigation">
-                <!-- Sidebar Header / Logo -->
-                <div class="sidebar-header">
-                    <a href="{% url 'home' %}" class="brand-link" title="ReliefStock Home">
-                        <div class="brand-badge">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-                                <path d="m3.3 7 8.7 5 8.7-5"/>
-                                <path d="M12 22V12"/>
-                            </svg>
-                        </div>
-                        <div class="brand-meta">
-                            <span class="brand-title">ReliefStock</span>
-                            <span class="brand-subtitle">Shelter &amp; Food Bank</span>
-                        </div>
-                    </a>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-navbar">
+        <div class="nav-container">
+            <!-- Brand Logo -->
+            <a href="{% url 'home' %}" class="brand-logo">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                        <path d="m3.3 7 8.7 5 8.7-5"/>
+                        <path d="M12 22V12"/>
+                    </svg>
                 </div>
+                <div class="brand-text">
+                    <span class="brand-name">ReliefStock</span>
+                    <span class="brand-tagline">Shelter &amp; Food Bank Management</span>
+                </div>
+            </a>
 
-                <!-- Navigation Links -->
-                <nav class="sidebar-nav">
-                    <div class="nav-section-title">Operations</div>
-
+            <!-- Navigation Links -->
+            <nav class="nav-links">
+                {% if user.is_authenticated %}
                     {% if user.role == 'DONOR' %}
-                        <a href="{% url 'donor_portal' %}" class="nav-item {% if request.resolver_match.url_name == 'donor_portal' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                            <span>My Contributions</span>
-                        </a>
-                        <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            <span>Home Profile</span>
+                        <a href="{% url 'donor_portal' %}" class="nav-link {% if request.resolver_match.url_name == 'donor_portal' %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                            My Contributions
                         </a>
                     {% else %}
-                        <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            <span>Home Overview</span>
+                        <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            Home
                         </a>
                     {% endif %}
 
                     {% if user.is_staff or user.role == 'ADMIN' or user.role == 'STAFF' or user.is_superuser %}
-                        <a href="{% url 'inventory:dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                            <span>Dashboard</span>
+                        <a href="{% url 'inventory:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                            Executive Dashboard
                         </a>
-                        <a href="{% url 'inventory:inventory_list' %}" class="nav-item {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                            <span>Inventory</span>
+                        <a href="{% url 'inventory:inventory_list' %}" class="nav-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                            Inventory
+                        </a>
+                        <a href="{% url 'inventory:low_stock_list' %}" class="nav-link {% if request.resolver_match.url_name == 'low_stock_list' %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            Low Stock
+                        </a>
+                        <a href="{% url 'inventory:expiring_stock_list' %}" class="nav-link {% if request.resolver_match.url_name == 'expiring_stock_list' %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Expiring Soon
+                        </a>
+                        <a href="{% url 'inventory:report_inventory' %}" class="nav-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            Reports
                         </a>
                     {% endif %}
 
                     {% if user.role == 'ADMIN' or user.role == 'STAFF' or user.role == 'VOLUNTEER' or user.is_superuser %}
-                        <a href="{% url 'inventory:record_donation' %}" class="nav-item {% if request.resolver_match.url_name == 'record_donation' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                            <span>Donations</span>
+                        <a href="{% url 'inventory:record_donation' %}" class="nav-link {% if request.resolver_match.url_name == 'record_donation' %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                            Record Donation
                         </a>
-                        <a href="{% url 'inventory:distribution_request_list' %}" class="nav-item {% if 'distribution' in request.resolver_match.url_name %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                            <span>Distribution Requests</span>
-                        </a>
-                    {% endif %}
-
-                    {% if user.is_staff or user.role == 'ADMIN' or user.role == 'STAFF' or user.is_superuser %}
-                        <div class="nav-section-title">Alerts &amp; Intelligence</div>
-                        <a href="{% url 'inventory:low_stock_list' %}" class="nav-item {% if request.resolver_match.url_name == 'low_stock_list' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            <span>Low Stock</span>
-                        </a>
-                        <a href="{% url 'inventory:expiring_stock_list' %}" class="nav-item {% if request.resolver_match.url_name == 'expiring_stock_list' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            <span>Expiring Soon</span>
-                        </a>
-                        <a href="{% url 'inventory:report_inventory' %}" class="nav-item {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            <span>Reports</span>
+                        <a href="{% url 'inventory:distribution_request_list' %}" class="nav-link {% if 'distribution' in request.resolver_match.url_name %}active{% endif %}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                            Distribution Requests
                         </a>
                     {% endif %}
 
                     {% if user.is_staff or user.role == 'ADMIN' or user.is_superuser %}
-                        <div class="nav-section-title">Administration</div>
-                        <a href="{% url 'admin:organizations_organization_changelist' %}" class="nav-item" target="_blank" rel="noopener">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h1"/><path d="M9 13h1"/><path d="M9 17h1"/></svg>
-                            <span>Organizations</span>
-                        </a>
-                        <a href="{% url 'admin:index' %}" class="nav-item" target="_blank" rel="noopener">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            <span>Django Admin</span>
+                        <a href="{% url 'admin:index' %}" class="nav-link" target="_blank" rel="noopener">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Django Admin
                         </a>
                     {% endif %}
-                </nav>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Log In</a>
+                    <a href="{% url 'admin:index' %}" class="nav-link">Admin Portal</a>
+                {% endif %}
+            </nav>
 
-                <!-- Sidebar Footer: User Profile & Logout -->
-                <div class="sidebar-footer">
-                    <div class="user-profile-card">
-                        <div class="user-avatar-initials">
+            <!-- User Status & Actions -->
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+                    <div class="user-badge">
+                        <div class="user-avatar">
                             {{ user.username|make_list|first|upper }}
                         </div>
-                        <div class="user-info">
-                            <div class="user-name" title="{{ user.username }}">{{ user.username }}</div>
-                            <div class="user-org">
-                                <span class="role-badge {% if user.role == 'ADMIN' %}badge-admin{% elif user.role == 'STAFF' %}badge-staff{% elif user.role == 'VOLUNTEER' %}badge-volunteer{% else %}badge-donor{% endif %}">
-                                    {{ user.role }}
-                                </span>
-                            </div>
-                        </div>
+                        <span>{{ user.username }}</span>
+                        <span class="role-badge {% if user.role == 'ADMIN' %}badge-admin{% elif user.role == 'STAFF' %}badge-staff{% elif user.role == 'VOLUNTEER' %}badge-volunteer{% else %}badge-donor{% endif %}">
+                            {{ user.role }}
+                        </span>
                     </div>
 
-                    <form action="{% url 'logout' %}" method="post">
+                    <form action="{% url 'logout' %}" method="post" style="display:inline;">
                         {% csrf_token %}
-                        <button type="submit" class="sidebar-logout-btn" title="Sign out of ReliefStock">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            <span>Log Out</span>
+                        <button type="submit" class="btn-logout" title="Sign out of ReliefStock">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Log Out
                         </button>
                     </form>
-                </div>
-            </aside>
-        {% endif %}
-
-        <!-- MAIN VIEW WRAPPER -->
-        <div class="app-main">
-            <!-- TOP APP HEADER -->
-            <header class="top-header">
-                <div class="header-left">
-                    {% if user.is_authenticated %}
-                        <button type="button" class="mobile-menu-btn" id="sidebarToggleBtn" aria-label="Toggle navigation drawer">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-                        </button>
-                        <div class="header-breadcrumbs">
-                            <span class="breadcrumb-root">ReliefStock</span>
-                            <span class="breadcrumb-sep">/</span>
-                            <span class="breadcrumb-current">
-                                {% if request.resolver_match.url_name == 'dashboard' %}Dashboard
-                                {% elif request.resolver_match.url_name == 'inventory_list' %}Inventory
-                                {% elif request.resolver_match.url_name == 'low_stock_list' %}Low Stock Alerts
-                                {% elif request.resolver_match.url_name == 'expiring_stock_list' %}Expiring Stock
-                                {% elif 'distribution' in request.resolver_match.url_name %}Distributions
-                                {% elif 'report' in request.resolver_match.url_name %}Audit Reports
-                                {% elif request.resolver_match.url_name == 'record_donation' %}Donation Intake
-                                {% elif request.resolver_match.url_name == 'home' %}Home
-                                {% else %}Operations{% endif %}
-                            </span>
-                        </div>
-                    {% else %}
-                        <a href="{% url 'home' %}" class="brand-link" style="color: var(--text-main);">
-                            <div class="brand-badge" style="width: 32px; height: 32px;">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-                                </svg>
-                            </div>
-                            <strong style="font-size: 1.1rem; color: var(--text-main);">ReliefStock</strong>
-                        </a>
-                    {% endif %}
-                </div>
-
-                <div class="header-right">
-                    <div class="system-status-pill">
-                        <span class="status-dot"></span>
-                        <span>System Operational</span>
-                    </div>
-
-                    {% if not user.is_authenticated %}
-                        <a href="{% url 'login' %}" class="btn btn-primary btn-sm">Log In</a>
-                        <a href="{% url 'admin:index' %}" class="btn btn-outline btn-sm">Admin Portal</a>
-                    {% endif %}
-                </div>
-            </header>
-
-            <!-- SYSTEM NOTIFICATIONS / ALERTS -->
-            {% if messages %}
-                <section class="messages-container" aria-label="Notifications">
-                    {% for message in messages %}
-                        <div class="alert-message alert-auto-dismiss {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                {% if message.tags == 'error' %}
-                                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-                                {% elif message.tags == 'success' %}
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                                {% elif message.tags == 'warning' %}
-                                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                                {% else %}
-                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-                                {% endif %}
-                            </svg>
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                </section>
-            {% endif %}
-
-            <!-- PAGE CONTENT BLOCK -->
-            <main class="page-container">
-                {% block content %}
-                {% endblock %}
-            </main>
-
-            <!-- ENTERPRISE FOOTER -->
-            <footer class="site-footer">
-                <div class="footer-content">
-                    <div>
-                        <strong>ReliefStock</strong> &mdash; Community Inventory &amp; Donation Management System
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 16px;">
-                        <div class="system-status-pill" style="padding: 2px 10px; font-size: 0.72rem;">
-                            <span class="status-dot"></span>
-                            <span>System Operational</span>
-                        </div>
-                        <span>Django 5.1 &bull; PostgreSQL &bull; DRF API</span>
-                    </div>
-                </div>
-            </footer>
+                {% endif %}
+            </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Client-side Scripts -->
-    <script src="{% static 'js/main.js' %}"></script>
+    <!-- SYSTEM ALERTS / MESSAGES -->
+    {% if messages %}
+        <section class="messages-container" aria-label="Notifications">
+            {% for message in messages %}
+                <div class="alert-message {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        {% if message.tags == 'error' %}
+                            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                        {% elif message.tags == 'success' %}
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                        {% elif message.tags == 'warning' %}
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        {% else %}
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                        {% endif %}
+                    </svg>
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <!-- MAIN PAGE CONTENT -->
+    <main class="main-wrapper">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div>
+                <strong>ReliefStock</strong> &mdash; Community Inventory &amp; Donation Management System
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="system-status">
+                    <span class="status-dot"></span>
+                    <span>System Operational</span>
+                </div>
+                <span>Django 5.1 &bull; PostgreSQL &bull; DRF API</span>
+            </div>
+        </div>
+    </footer>
+
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
