@@ -66,7 +66,7 @@
                         </td>
                         <td>
                             <span class="badge" style="background-color: var(--border-light); color: var(--text-muted);">
-                                {{ item.category.name }}
+                                🏷️ {{ item.category.name }}
                             </span>
                         </td>
                         <td>
@@ -76,7 +76,7 @@
                             {% if item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}
                                 <div style="margin-top: 4px;">
                                     <span class="badge badge-danger">
-                                        Low &le; {{ item.reorder_threshold }}
+                                        ⚠️ Low &le; {{ item.reorder_threshold }}
                                     </span>
                                 </div>
                             {% endif %}
@@ -86,18 +86,18 @@
                         </td>
                         <td>
                             {% if item.is_perishable %}
-                                <span class="badge badge-warning">Perishable</span>
+                                <span class="badge badge-warning">⏳ Perishable</span>
                             {% else %}
-                                <span class="badge" style="background-color: #f1f5f9; color: #64748b;">Non-Perishable</span>
+                                <span class="badge" style="background-color: #f1f5f9; color: #64748b;">📦 Standard</span>
                             {% endif %}
                         </td>
                         <td style="text-align: right;">
                             <div style="display: inline-flex; gap: 8px; justify-content: flex-end;">
                                 <a href="{% url 'inventory:inventory_detail' item.pk %}" class="btn btn-outline btn-xs">
-                                    History
+                                    📋 History
                                 </a>
                                 <a href="{% url 'inventory:manual_adjustment' item.pk %}" class="btn btn-secondary btn-xs">
-                                    Adjust Stock
+                                    ⚖️ Adjust Stock
                                 </a>
                             </div>
                         </td>
