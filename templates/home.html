@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block title %}Dashboard | ReliefStock{% endblock %}
 
@@ -99,7 +98,8 @@
 <div class="section-header">
     <div>
         <h3 class="section-title">
-            <span>⚡</span> Quick Actions &amp; Operations
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Quick Actions &amp; Operations
         </h3>
         <p class="section-subtitle">Select an operational workflow to manage inventory, distributions, or generate reports.</p>
     </div>
@@ -112,12 +112,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-dashboard">
-                        <span style="font-size: 1.6rem;">📊</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: var(--primary-light); color: var(--primary);">Live Metrics</span>
                 </div>
                 <div class="card-body">
-                    <h4>📊 Executive Dashboard</h4>
+                    <h4>Executive Dashboard</h4>
                     <p>Live operational summary of catalog inventory, low-stock warnings, pending approval queues, and monthly throughput.</p>
                 </div>
             </div>
@@ -132,12 +132,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-inventory">
-                        <span style="font-size: 1.6rem;">📦</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: #f0fdfa; color: #0d9488;">Live Stock</span>
                 </div>
                 <div class="card-body">
-                    <h4>📦 Inventory Management</h4>
+                    <h4>Inventory Management</h4>
                     <p>Inspect real-time stock balances across all categories, review SKU audit logs, and execute manual adjustments.</p>
                 </div>
             </div>
@@ -152,12 +152,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-reports">
-                        <span style="font-size: 1.6rem;">📑</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: #f5f3ff; color: #7c3aed;">CSV &bull; PDF</span>
                 </div>
                 <div class="card-body">
-                    <h4>📑 Reports &amp; Exports</h4>
+                    <h4>Reports &amp; Exports</h4>
                     <p>Generate, filter, and export Inventory Stock, Inbound Donations, and Distribution history reports as CSV and formal PDF.</p>
                 </div>
             </div>
@@ -174,12 +174,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-donations">
-                        <span style="font-size: 1.6rem;">🎁</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: #f0fdf4; color: #16a34a;">Intake</span>
                 </div>
                 <div class="card-body">
-                    <h4>🎁 Record Inbound Donation</h4>
+                    <h4>Record Inbound Donation</h4>
                     <p>Log drop-offs from community donors with multi-item quantities, expiry dates, and atomic stock ledger creation.</p>
                 </div>
             </div>
@@ -194,12 +194,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-distrib">
-                        <span style="font-size: 1.6rem;">🚚</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: #e0f2fe; color: #0284c7;">Aid Dispatch</span>
                 </div>
                 <div class="card-body">
-                    <h4>🚚 Distribution Requests</h4>
+                    <h4>Distribution Requests</h4>
                     <p>Request relief supplies for recipients, track approval status, and record partial or full warehouse fulfillment.</p>
                 </div>
             </div>
@@ -216,12 +216,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-lowstock">
-                        <span style="font-size: 1.6rem;">⚠️</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: var(--warning-light); color: var(--warning);">Restock Alert</span>
                 </div>
                 <div class="card-body">
-                    <h4>⚠️ Low Stock Alerts</h4>
+                    <h4>Low Stock Alerts</h4>
                     <p>Identify inventory items at or below their configured reorder thresholds, sorted by greatest calculated deficit.</p>
                 </div>
             </div>
@@ -236,12 +236,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-expiry">
-                        <span style="font-size: 1.6rem;">⏳</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: var(--danger-light); color: var(--danger);">Perishables</span>
                 </div>
                 <div class="card-body">
-                    <h4>⏳ Perishable Expiry Tracking</h4>
+                    <h4>Perishable Expiry Tracking</h4>
                     <p>Track perishable items expiring within the next 7 days to prioritize immediate dispatch, plus review expired batches.</p>
                 </div>
             </div>
@@ -258,12 +258,12 @@
             <div>
                 <div class="card-top">
                     <div class="card-icon icon-admin">
-                        <span style="font-size: 1.6rem;">🛡️</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     </div>
                     <span class="card-badge" style="background-color: #f1f5f9; color: #475569;">Admin Access</span>
                 </div>
                 <div class="card-body">
-                    <h4>🛡️ Django Admin Portal</h4>
+                    <h4>Django Admin Portal</h4>
                     <p>Administrative console for managing relief organizations, catalog categories, user roles, and low-level database audits.</p>
                 </div>
             </div>
