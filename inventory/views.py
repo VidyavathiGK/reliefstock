@@ -2,6 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, DecimalField, F, Q, Sum, Value, When
 from django.db.models.functions import Coalesce
@@ -25,6 +26,7 @@ from .forms import (
     ManualStockAdjustmentForm,
 )
 from .models import (
+    Category,
     DistributionRequest,
     DistributionRequestItem,
     Donation,
@@ -74,15 +76,71 @@ def inventory_list(request):
                 Value(Decimal("0.00"), output_field=DecimalField()),
             )
         )
-        .order_by("category__name", "name")
     )
+
+    # Search query
+    q = request.GET.get("q", "").strip()
+    if q:
+        items = items.filter(
+            Q(name__icontains=q) | Q(category__name__icontains=q) | Q(unit_of_measure__icontains=q)
+        )
+
+    # Category filter
+    category_id = request.GET.get("category", "").strip()
+    if category_id and category_id.isdigit():
+        items = items.filter(category_id=int(category_id))
+
+    # Perishable filter
+    perishable = request.GET.get("perishable", "").strip()
+    if perishable == "yes":
+        items = items.filter(is_perishable=True)
+    elif perishable == "no":
+        items = items.filter(is_perishable=False)
+
+    # Stock status filter
+    status = request.GET.get("status", "").strip()
+    if status == "in_stock":
+        items = items.filter(current_stock__gt=Decimal("0.00"))
+    elif status == "out_of_stock":
+        items = items.filter(current_stock__lte=Decimal("0.00"))
+    elif status == "low_stock":
+        items = items.filter(
+            reorder_threshold__isnull=False,
+            current_stock__lte=F("reorder_threshold"),
+        )
+
+    # Sorting
+    sort = request.GET.get("sort", "").strip()
+    if sort == "name_desc":
+        items = items.order_by("-name")
+    elif sort == "stock_desc":
+        items = items.order_by("-current_stock", "name")
+    elif sort == "stock_asc":
+        items = items.order_by("current_stock", "name")
+    elif sort == "category":
+        items = items.order_by("category__name", "name")
+    else:
+        items = items.order_by("category__name", "name")
+
+    paginator = Paginator(items, 25)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+    categories = Category.objects.all()
 
     return render(
         request,
         "inventory/inventory_list.html",
         {
-            "items": items,
+            "items": page_obj,
+            "page_obj": page_obj,
             "organization": user_org,
+            "categories": categories,
+            "q": q,
+            "selected_category": category_id,
+            "selected_status": status,
+            "selected_perishable": perishable,
+            "selected_sort": sort,
+            "total_count": paginator.count,
         },
     )
 
@@ -736,6 +794,110 @@ def dashboard(request):
         created_at__month=today.month,
     ).aggregate(total=Sum("quantity"))["total"] or Decimal("0.00")
 
+    # 6. Category Breakdown for chart and metrics
+    category_breakdown = []
+    categories_with_items = (
+        Category.objects.filter(items__organization=user_org).distinct().order_by("name")
+    )
+    total_stock_float = float(total_stock_units) if total_stock_units > 0 else 1.0
+    for cat in categories_with_items:
+        cat_items = [it for it in annotated_items if it.category_id == cat.id]
+        cat_stock = sum(it.current_stock for it in cat_items) or Decimal("0.00")
+        cat_pct = round((float(cat_stock) / total_stock_float) * 100, 1)
+        category_breakdown.append(
+            {
+                "category": cat,
+                "name": cat.name,
+                "sku_count": len(cat_items),
+                "total_stock": cat_stock,
+                "stock_pct": cat_pct,
+            }
+        )
+    category_breakdown.sort(key=lambda x: x["total_stock"], reverse=True)
+
+    # 7. Monthly Trends (Past 6 Months) for Throughput Chart
+    monthly_trends = []
+    max_trend_val = 10.0
+    for i in range(5, -1, -1):
+        m_year = today.year
+        m_month = today.month - i
+        while m_month <= 0:
+            m_month += 12
+            m_year -= 1
+
+        month_label = timezone.datetime(m_year, m_month, 1).strftime("%b %y")
+
+        in_qty = StockTransaction.objects.filter(
+            organization=user_org,
+            transaction_type=StockTransaction.TransactionType.DONATION_IN,
+            created_at__year=m_year,
+            created_at__month=m_month,
+        ).aggregate(total=Sum("quantity"))["total"] or Decimal("0.00")
+
+        out_qty = StockTransaction.objects.filter(
+            organization=user_org,
+            transaction_type=StockTransaction.TransactionType.DISTRIBUTION_OUT,
+            created_at__year=m_year,
+            created_at__month=m_month,
+        ).aggregate(total=Sum("quantity"))["total"] or Decimal("0.00")
+
+        in_float = float(in_qty)
+        out_float = float(out_qty)
+        if in_float > max_trend_val:
+            max_trend_val = in_float
+        if out_float > max_trend_val:
+            max_trend_val = out_float
+
+        monthly_trends.append(
+            {
+                "month_label": month_label,
+                "year": m_year,
+                "month": m_month,
+                "in_units": in_float,
+                "out_units": out_float,
+            }
+        )
+
+    for m in monthly_trends:
+        m["in_pct"] = round((m["in_units"] / max_trend_val) * 100, 1) if max_trend_val else 0
+        m["out_pct"] = round((m["out_units"] / max_trend_val) * 100, 1) if max_trend_val else 0
+
+    # 8. Recent activity timeline (Audit Log)
+    recent_activity = (
+        StockTransaction.objects.filter(organization=user_org)
+        .select_related(
+            "inventory_item",
+            "inventory_item__category",
+            "recorded_by",
+            "donation",
+            "distribution_request",
+        )
+        .order_by("-created_at")[:8]
+    )
+
+    # 9. Important Alerts detail lists
+    critical_low_stock_items = [
+        item
+        for item in annotated_items
+        if item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold
+    ]
+    critical_low_stock_items.sort(key=lambda x: x.reorder_threshold - x.current_stock, reverse=True)
+    critical_low_stock_items = critical_low_stock_items[:5]
+
+    urgent_expiries = (
+        perishable_txns.filter(expiry_date__gte=today, expiry_date__lte=seven_days)
+        .select_related("inventory_item")
+        .order_by("expiry_date")[:5]
+    )
+
+    pending_approvals = (
+        DistributionRequest.objects.filter(
+            organization=user_org, status=DistributionRequest.Status.PENDING
+        )
+        .select_related("requested_by")
+        .order_by("-requested_at")[:5]
+    )
+
     return render(
         request,
         "inventory/dashboard.html",
@@ -752,6 +914,12 @@ def dashboard(request):
             "distributions_this_month_count": distributions_this_month_count,
             "items_distributed_this_month": items_distributed_this_month,
             "today": today,
+            "category_breakdown": category_breakdown,
+            "monthly_trends": monthly_trends,
+            "recent_activity": recent_activity,
+            "critical_low_stock_items": critical_low_stock_items,
+            "urgent_expiries": urgent_expiries,
+            "pending_approvals": pending_approvals,
         },
     )
 

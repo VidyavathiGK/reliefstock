@@ -46,6 +46,92 @@
     </div>
 </section>
 
+<!-- WORKFLOW STEPPER PROGRESS BAR -->
+<div class="workflow-stepper">
+    <div class="stepper-progress-bar">
+        <div class="stepper-progress-fill" style="width: {% if dist_req.status == 'PENDING' %}33%{% elif dist_req.status == 'APPROVED' %}66%{% elif dist_req.status == 'FULFILLED' %}100%{% elif dist_req.status == 'REJECTED' %}33%{% else %}0%{% endif %}; {% if dist_req.status == 'REJECTED' %}background-color: var(--danger);{% endif %}"></div>
+    </div>
+
+    <!-- Step 1: Requested -->
+    <div class="step-node completed">
+        <div class="step-icon-circle">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="step-label">1. Requested</div>
+        <div class="step-timestamp">{{ dist_req.requested_at|date:"M d, H:i" }}</div>
+    </div>
+
+    <!-- Step 2: Pending Review -->
+    <div class="step-node {% if dist_req.status == 'PENDING' %}active{% elif dist_req.status == 'REJECTED' %}rejected{% else %}completed{% endif %}">
+        <div class="step-icon-circle">
+            {% if dist_req.status == 'PENDING' %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            {% elif dist_req.status == 'REJECTED' %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            {% else %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            {% endif %}
+        </div>
+        <div class="step-label">
+            {% if dist_req.status == 'REJECTED' %}Rejected{% else %}2. Admin Review{% endif %}
+        </div>
+        <div class="step-timestamp">
+            {% if dist_req.reviewed_at %}{{ dist_req.reviewed_at|date:"M d, H:i" }}{% else %}Awaiting Review{% endif %}
+        </div>
+    </div>
+
+    <!-- Step 3: Approved -->
+    <div class="step-node {% if dist_req.status == 'APPROVED' %}active{% elif dist_req.status == 'FULFILLED' %}completed{% else %}pending{% endif %}">
+        <div class="step-icon-circle">
+            {% if dist_req.status == 'FULFILLED' %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            {% elif dist_req.status == 'APPROVED' %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            {% else %}
+                3
+            {% endif %}
+        </div>
+        <div class="step-label">3. Approved</div>
+        <div class="step-timestamp">
+            {% if dist_req.status == 'APPROVED' or dist_req.status == 'FULFILLED' %}Authorized{% else %}Awaiting Approval{% endif %}
+        </div>
+    </div>
+
+    <!-- Step 4: Dispatched / Fulfilled -->
+    <div class="step-node {% if dist_req.status == 'FULFILLED' %}completed{% else %}pending{% endif %}">
+        <div class="step-icon-circle">
+            {% if dist_req.status == 'FULFILLED' %}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            {% else %}
+                4
+            {% endif %}
+        </div>
+        <div class="step-label">4. Dispatched</div>
+        <div class="step-timestamp">
+            {% if dist_req.status == 'FULFILLED' %}Warehouse Fulfilled{% else %}Warehouse Fulfillment{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ACTION GUIDANCE BANNER -->
+{% if dist_req.status == 'PENDING' and is_admin %}
+    <div class="alert-message alert-warning" style="margin-bottom: 24px; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>This aid requisition is awaiting administrative review. Inspect requested quantities and decide.</span>
+        </div>
+        <a href="{% url 'inventory:distribution_request_review' dist_req.pk %}" class="btn btn-primary btn-sm">Review Now</a>
+    </div>
+{% elif dist_req.status == 'APPROVED' and is_staff_or_admin %}
+    <div class="alert-message alert-success" style="margin-bottom: 24px; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>This request is approved. Warehouse staff can dispatch stock to fulfill requested quantities.</span>
+        </div>
+        <a href="{% url 'inventory:distribution_request_fulfill' dist_req.pk %}" class="btn btn-primary btn-sm" style="background-color: var(--success); border-color: var(--success);">Fulfill Now</a>
+    </div>
+{% endif %}
+
 <!-- REQUEST OVERVIEW CARD -->
 <div class="form-card" style="margin-bottom: 28px;">
     <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
