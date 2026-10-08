@@ -10,6 +10,7 @@
 </head>
 <body>
     <!-- TOP NAVIGATION BAR -->
+    {% block navbar %}
     <header class="top-navbar">
         <div class="nav-container">
             <!-- Brand Logo -->
@@ -112,6 +113,7 @@
             </div>
         </div>
     </header>
+    {% endblock %}
 
     <!-- SYSTEM ALERTS / MESSAGES -->
     {% if messages %}
@@ -142,6 +144,7 @@
     </main>
 
     <!-- FOOTER -->
+    {% block footer %}
     <footer class="site-footer">
         <div class="footer-content">
             <div>
@@ -156,6 +159,7 @@
             </div>
         </div>
     </footer>
+    {% endblock %}
 
     {% block extra_scripts %}{% endblock %}
 </body>
