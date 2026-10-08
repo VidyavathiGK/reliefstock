@@ -39,78 +39,16 @@
     </div>
 </section>
 
-<!-- SEARCH & FILTER TOOLBAR -->
-<div class="search-filter-card">
-    <form method="get" action="{% url 'inventory:inventory_list' %}" class="filter-grid">
-        <!-- 1. Text Search Input -->
-        <div class="filter-input-wrap">
-            <svg class="filter-input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search commodity, SKU, or notes..." class="filter-input" aria-label="Search items">
-        </div>
-
-        <!-- 2. Category Dropdown -->
-        <div>
-            <select name="category" class="filter-select" aria-label="Filter by category">
-                <option value="">All Categories</option>
-                {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
-                        {{ cat.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- 3. Stock Status Dropdown -->
-        <div>
-            <select name="status" class="filter-select" aria-label="Filter by stock status">
-                <option value="">All Stock Status</option>
-                <option value="in_stock" {% if selected_status == 'in_stock' %}selected{% endif %}>In Stock (> 0)</option>
-                <option value="low_stock" {% if selected_status == 'low_stock' %}selected{% endif %}>Low Stock (&le; Threshold)</option>
-                <option value="out_of_stock" {% if selected_status == 'out_of_stock' %}selected{% endif %}>Out of Stock (= 0)</option>
-            </select>
-        </div>
-
-        <!-- 4. Perishable Filter -->
-        <div>
-            <select name="perishable" class="filter-select" aria-label="Filter by perishability">
-                <option value="">All Shelf Life</option>
-                <option value="yes" {% if selected_perishable == 'yes' %}selected{% endif %}>Perishable Only</option>
-                <option value="no" {% if selected_perishable == 'no' %}selected{% endif %}>Non-Perishable Only</option>
-            </select>
-        </div>
-
-        <!-- 5. Sorting -->
-        <div>
-            <select name="sort" class="filter-select" aria-label="Sort inventory items">
-                <option value="name_asc" {% if selected_sort == 'name_asc' or not selected_sort %}selected{% endif %}>Name (A &rarr; Z)</option>
-                <option value="name_desc" {% if selected_sort == 'name_desc' %}selected{% endif %}>Name (Z &rarr; A)</option>
-                <option value="stock_desc" {% if selected_sort == 'stock_desc' %}selected{% endif %}>Stock (High &rarr; Low)</option>
-                <option value="stock_asc" {% if selected_sort == 'stock_asc' %}selected{% endif %}>Stock (Low &rarr; High)</option>
-                <option value="category" {% if selected_sort == 'category' %}selected{% endif %}>Category</option>
-            </select>
-        </div>
-
-        <!-- 6. Filter Actions -->
-        <div style="display: flex; gap: 8px;">
-            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-            {% if q or selected_category or selected_status or selected_perishable or selected_sort %}
-                <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline btn-sm" title="Clear all filters">Reset</a>
-            {% endif %}
-        </div>
-    </form>
-</div>
-
 <!-- INVENTORY DATA TABLE -->
 {% if items %}
-    <div class="table-card" style="border-radius: var(--radius-lg) var(--radius-lg) 0 0; margin-bottom: 0;">
+    <div class="table-card">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Item Name &amp; SKU</th>
+                    <th>Item Name</th>
                     <th>Category</th>
                     <th>Current Stock</th>
-                    <th>Reorder Threshold</th>
-                    <th>Status</th>
+                    <th>Unit</th>
                     <th>Perishable</th>
                     <th style="text-align: right;">Actions</th>
                 </tr>
@@ -122,7 +60,9 @@
                             <strong style="font-size: 1rem;">
                                 <a href="{% url 'inventory:inventory_detail' item.pk %}">{{ item.name }}</a>
                             </strong>
-                            <div style="font-size: 0.78rem; color: var(--text-subtle);">SKU #{{ item.pk }} &bull; Tracked in {{ item.unit_of_measure }}</div>
+                            {% if item.description %}
+                                <div style="font-size: 0.8rem; color: var(--text-subtle);">{{ item.description|truncatewords:8 }}</div>
+                            {% endif %}
                         </td>
                         <td>
                             <span class="badge" style="background-color: var(--border-light); color: var(--text-muted);">
@@ -130,28 +70,19 @@
                             </span>
                         </td>
                         <td>
-                            <strong style="font-size: 1.15rem; color: {% if item.current_stock <= 0 %}var(--danger){% elif item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}var(--warning){% else %}var(--text-main){% endif %};">
+                            <strong style="font-size: 1.15rem; color: {% if item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}var(--danger){% else %}var(--text-main){% endif %};">
                                 {{ item.current_stock }}
                             </strong>
-                            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">{{ item.unit_of_measure }}</span>
-                        </td>
-                        <td>
-                            {% if item.reorder_threshold is not None %}
-                                <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">
-                                    {{ item.reorder_threshold }} {{ item.unit_of_measure }}
-                                </span>
-                            {% else %}
-                                <span style="color: var(--text-subtle); font-size: 0.85rem;">—</span>
+                            {% if item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}
+                                <div style="margin-top: 4px;">
+                                    <span class="badge badge-danger">
+                                        Low &le; {{ item.reorder_threshold }}
+                                    </span>
+                                </div>
                             {% endif %}
                         </td>
-                        <td>
-                            {% if item.current_stock <= 0 %}
-                                <span class="badge badge-danger">Out of Stock</span>
-                            {% elif item.reorder_threshold is not None and item.current_stock <= item.reorder_threshold %}
-                                <span class="badge badge-warning">Low Stock</span>
-                            {% else %}
-                                <span class="badge badge-success">In Stock</span>
-                            {% endif %}
+                        <td style="color: var(--text-muted); font-weight: 500;">
+                            {{ item.unit_of_measure }}
                         </td>
                         <td>
                             {% if item.is_perishable %}
@@ -175,68 +106,20 @@
             </tbody>
         </table>
     </div>
-
-    <!-- PAGINATION FOOTER -->
-    <div class="pagination-wrapper">
-        <div>
-            Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of <strong>{{ total_count|default:page_obj.paginator.count }}</strong> items
-        </div>
-
-        {% if page_obj.has_other_pages %}
-            <div class="pagination-controls">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_perishable %}&perishable={{ selected_perishable }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" class="page-btn">
-                        &larr; Prev
-                    </a>
-                {% else %}
-                    <span class="page-btn disabled">&larr; Prev</span>
-                {% endif %}
-
-                {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                        <span class="page-btn active">{{ num }}</span>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_perishable %}&perishable={{ selected_perishable }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" class="page-btn">
-                            {{ num }}
-                        </a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_perishable %}&perishable={{ selected_perishable }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" class="page-btn">
-                        Next &rarr;
-                    </a>
-                {% else %}
-                    <span class="page-btn disabled">Next &rarr;</span>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
 {% else %}
-    <div class="saas-empty-state">
-        <div class="empty-state-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <div class="form-card" style="text-align: center; padding: 48px 24px;">
+        <div class="card-icon" style="margin: 0 auto 16px; background-color: var(--border-light); color: var(--text-subtle); width: 56px; height: 56px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         </div>
-        <h3 class="empty-state-title">No Inventory Items Found</h3>
-        <p class="empty-state-desc">
-            {% if q or selected_category or selected_status or selected_perishable %}
-                No catalog items match your active search and filter criteria. Try resetting your filters.
-            {% else %}
-                No commodities are registered for {{ organization.name }} yet.
-            {% endif %}
+        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 8px;">No Inventory Items Found</h3>
+        <p style="color: var(--text-muted); max-width: 480px; margin: 0 auto 20px;">
+            No commodities are registered for {{ organization.name }} yet.
         </p>
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            {% if q or selected_category or selected_status or selected_perishable %}
-                <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline btn-sm">
-                    Clear Filters
-                </a>
-            {% endif %}
-            {% if user.is_staff or user.role == 'ADMIN' %}
-                <a href="{% url 'admin:inventory_inventoryitem_add' %}" class="btn btn-primary btn-sm" target="_blank" rel="noopener">
-                    + Register First Catalog Item in Admin
-                </a>
-            {% endif %}
-        </div>
+        {% if user.is_staff or user.role == 'ADMIN' %}
+            <a href="{% url 'admin:inventory_inventoryitem_add' %}" class="btn btn-primary" target="_blank" rel="noopener">
+                + Register First Catalog Item in Admin
+            </a>
+        {% endif %}
     </div>
 {% endif %}
 {% endblock %}

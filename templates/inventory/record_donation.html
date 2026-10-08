@@ -21,14 +21,6 @@
     </div>
 </section>
 
-<!-- INTAKE LEDGER POLICY NOTICE -->
-<div class="alert-message alert-info" style="margin-bottom: 24px;">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-    <span>
-        <strong>Atomic Ledger Integration:</strong> Submitting this intake creates verified ledger transactions, updates physical balances immediately, and archives donor records for compliance audits.
-    </span>
-</div>
-
 <form method="post" action="{% url 'inventory:record_donation' %}">
     {% csrf_token %}
 

@@ -46,7 +46,7 @@
                     {% if user.is_staff or user.role == 'ADMIN' or user.role == 'STAFF' or user.is_superuser %}
                         <a href="{% url 'inventory:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                            Dashboard
+                            Executive Dashboard
                         </a>
                         <a href="{% url 'inventory:inventory_list' %}" class="nav-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
@@ -78,15 +78,14 @@
                     {% endif %}
 
                     {% if user.is_staff or user.role == 'ADMIN' or user.is_superuser %}
-                        <div class="nav-divider"></div>
-                        <a href="{% url 'admin:index' %}" class="nav-link" target="_blank" rel="noopener" style="color: var(--text-muted);">
+                        <a href="{% url 'admin:index' %}" class="nav-link" target="_blank" rel="noopener">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                             Django Admin
                         </a>
                     {% endif %}
                 {% else %}
                     <a href="{% url 'login' %}" class="nav-link">Log In</a>
-                    <a href="{% url 'admin:index' %}" class="nav-link" target="_blank" rel="noopener">Admin Portal</a>
+                    <a href="{% url 'admin:index' %}" class="nav-link">Admin Portal</a>
                 {% endif %}
             </nav>
 
@@ -111,120 +110,17 @@
                         </button>
                     </form>
                 {% endif %}
-
-                <!-- Mobile Hamburger Toggle Button -->
-                <button type="button" class="mobile-toggle-btn" id="mobileMenuToggle" aria-label="Toggle navigation menu" aria-expanded="false">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"/>
-                        <line x1="3" y1="6" x2="21" y2="6"/>
-                        <line x1="3" y1="18" x2="21" y2="18"/>
-                    </svg>
-                </button>
             </div>
         </div>
     </header>
-
-    <!-- RESPONSIVE MOBILE NAVIGATION DRAWER -->
-    <div class="mobile-drawer-overlay" id="mobileDrawerOverlay"></div>
-    <aside class="mobile-drawer" id="mobileDrawer" aria-label="Mobile Navigation Drawer">
-        <div>
-            <div class="mobile-drawer-header">
-                <div class="brand-text">
-                    <span class="brand-name" style="font-size: 1.15rem;">ReliefStock</span>
-                    <span class="brand-tagline">Navigation Menu</span>
-                </div>
-                <button type="button" class="mobile-toggle-btn" id="mobileDrawerClose" aria-label="Close menu">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-            </div>
-
-            <nav class="mobile-nav-links">
-                {% if user.is_authenticated %}
-                    {% if user.role == 'DONOR' %}
-                        <a href="{% url 'donor_portal' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'donor_portal' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                            My Contributions
-                        </a>
-                    {% else %}
-                        <a href="{% url 'home' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            Home
-                        </a>
-                    {% endif %}
-
-                    {% if user.is_staff or user.role == 'ADMIN' or user.role == 'STAFF' or user.is_superuser %}
-                        <a href="{% url 'inventory:dashboard' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                            Dashboard
-                        </a>
-                        <a href="{% url 'inventory:inventory_list' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
-                            Inventory
-                        </a>
-                        <a href="{% url 'inventory:low_stock_list' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'low_stock_list' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                            Low Stock
-                        </a>
-                        <a href="{% url 'inventory:expiring_stock_list' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'expiring_stock_list' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            Expiring Soon
-                        </a>
-                        <a href="{% url 'inventory:report_inventory' %}" class="mobile-nav-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            Reports
-                        </a>
-                    {% endif %}
-
-                    {% if user.role == 'ADMIN' or user.role == 'STAFF' or user.role == 'VOLUNTEER' or user.is_superuser %}
-                        <a href="{% url 'inventory:record_donation' %}" class="mobile-nav-link {% if request.resolver_match.url_name == 'record_donation' %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                            Record Donation
-                        </a>
-                        <a href="{% url 'inventory:distribution_request_list' %}" class="mobile-nav-link {% if 'distribution' in request.resolver_match.url_name %}active{% endif %}">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><polygon points="17 9 23 9 20 19 17 19 17 9"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                            Distribution Requests
-                        </a>
-                    {% endif %}
-
-                    {% if user.is_staff or user.role == 'ADMIN' or user.is_superuser %}
-                        <a href="{% url 'admin:index' %}" class="mobile-nav-link" target="_blank" rel="noopener">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                            Django Admin
-                        </a>
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'login' %}" class="mobile-nav-link">Log In</a>
-                    <a href="{% url 'admin:index' %}" class="mobile-nav-link" target="_blank" rel="noopener">Admin Portal</a>
-                {% endif %}
-            </nav>
-        </div>
-
-        {% if user.is_authenticated %}
-            <div style="border-top: 1px solid var(--border-light); padding-top: 16px;">
-                <div class="user-badge" style="margin-bottom: 12px; justify-content: flex-start;">
-                    <div class="user-avatar">
-                        {{ user.username|make_list|first|upper }}
-                    </div>
-                    <span>{{ user.username }} ({{ user.role }})</span>
-                </div>
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-logout" style="width: 100%; justify-content: center;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        Log Out
-                    </button>
-                </form>
-            </div>
-        {% endif %}
-    </aside>
     {% endblock %}
 
-    <!-- TOAST NOTIFICATIONS / SYSTEM ALERTS -->
+    <!-- SYSTEM ALERTS / MESSAGES -->
     {% if messages %}
-        <div class="toast-container" id="toastContainer" aria-live="polite">
+        <section class="messages-container" aria-label="Notifications">
             {% for message in messages %}
-                <div class="toast-item {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}" role="alert">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;">
+                <div class="alert-message {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         {% if message.tags == 'error' %}
                             <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
                         {% elif message.tags == 'success' %}
@@ -235,11 +131,10 @@
                             <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
                         {% endif %}
                     </svg>
-                    <span style="font-size: 0.88rem; font-weight: 500;">{{ message }}</span>
-                    <button type="button" class="toast-close-btn" onclick="this.closest('.toast-item').remove()" aria-label="Dismiss message">&times;</button>
+                    <span>{{ message }}</span>
                 </div>
             {% endfor %}
-        </div>
+        </section>
     {% endif %}
 
     <!-- MAIN PAGE CONTENT -->
@@ -253,64 +148,18 @@
     <footer class="site-footer">
         <div class="footer-content">
             <div>
-                <strong>ReliefStock &mdash; Community Inventory &amp; Donation Management System</strong>
+                <strong>ReliefStock</strong> &mdash; Community Inventory &amp; Donation Management System
             </div>
             <div style="display: flex; align-items: center; gap: 16px;">
                 <div class="system-status">
                     <span class="status-dot"></span>
                     <span>System Operational</span>
                 </div>
-                <span>Django + PostgreSQL</span>
+                <span>Django 5.1 &bull; PostgreSQL &bull; DRF API</span>
             </div>
         </div>
     </footer>
     {% endblock %}
-
-    <!-- VANILLA JS UX ENHANCEMENTS -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Mobile Navigation Toggle
-            const toggleBtn = document.getElementById('mobileMenuToggle');
-            const drawerClose = document.getElementById('mobileDrawerClose');
-            const drawer = document.getElementById('mobileDrawer');
-            const overlay = document.getElementById('mobileDrawerOverlay');
-
-            function openDrawer() {
-                if (drawer && overlay) {
-                    drawer.classList.add('active');
-                    overlay.classList.add('active');
-                    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
-                }
-            }
-
-            function closeDrawer() {
-                if (drawer && overlay) {
-                    drawer.classList.remove('active');
-                    overlay.classList.remove('active');
-                    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
-                }
-            }
-
-            if (toggleBtn) toggleBtn.addEventListener('click', openDrawer);
-            if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
-            if (overlay) overlay.addEventListener('click', closeDrawer);
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') closeDrawer();
-            });
-
-            // Toast Auto-Dismiss
-            const toasts = document.querySelectorAll('.toast-item');
-            toasts.forEach(function(toast) {
-                setTimeout(function() {
-                    toast.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-                    toast.style.opacity = '0';
-                    toast.style.transform = 'translateX(100%)';
-                    setTimeout(function() { toast.remove(); }, 400);
-                }, 6000);
-            });
-        });
-    </script>
 
     {% block extra_scripts %}{% endblock %}
 </body>
